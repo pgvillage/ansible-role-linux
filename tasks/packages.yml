@@ -39,7 +39,7 @@
   ansible.builtin.dnf:
     name: "*"
     state: "{{ linux_package_state }}"
-  when: linux_package_state == latest
+  when: linux_package_state == 'latest'
   async: 600
   poll: 5
 
