@@ -1,7 +1,9 @@
 ---
 galaxy_info:
   author: S. Mannem
-  description: CTO
+  description: |
+    This role manages all linux tasks for a PgVillage PostgreSQL cluster.
+
   company: Nibble-IT
 
   # If the issue tracker for your role is not on github, uncomment the
