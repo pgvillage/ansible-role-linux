@@ -76,7 +76,7 @@ linux_public_repos:
   - name: "pgdg-rhel-extras"
     description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
     baseurl: https://download.postgresql.org/pub/repos/yum/common/pgdg-rhel$releasever-extras/redhat/rhel-$releasever-$basearch
-    enabled: true
+    enabled: false
     gpgcheck: true
     gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
     # repo_gpgcheck: yes
