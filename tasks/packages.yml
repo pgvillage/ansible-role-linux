@@ -36,26 +36,25 @@
 
 # This should be dnf package, but it hangs
 - name: Upgrade all packages
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name: "*"
     state: "{{ linux_package_state }}"
   when: linux_package_state == 'latest'
   async: 600
   poll: 5
 
-- name: Disable postgresql module
-  ansible.builtin.shell: |
-    set -o pipefail
-    dnf module list | grep -q postgres && dnf module disable -y postgresql || echo No postgres module
+- name: Check if postgresql module exists
+  ansible.builtin.command: dnf module list
+  register: dnf_module_list
   changed_when: false
-- name: Debug
-  ansible.builtin.debug:
-    var: packages
-  vars:
-    packages: "{{ linux_packages | bygroup(group_names) }}"
+  check_mode: false
 
+- name: Disable postgresql module
+  ansible.builtin.command: dnf module disable -y postgresql
+  when: "'postgresql' in dnf_module_list.stdout"
+  changed_when: false
 - name: Install packages
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name: "{{ item }}"
     state: "{{ linux_package_state }}"
     update_cache: "true"
