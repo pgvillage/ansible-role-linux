@@ -1,5 +1,7 @@
 ---
 galaxy_info:
+  namespace: pgvillage
+  role_name: linux
   author: S. Mannem
   description: |
     This role manages all linux tasks for a PgVillage PostgreSQL cluster.
