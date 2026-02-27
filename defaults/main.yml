@@ -81,6 +81,7 @@ linux_public_repos:
     gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
     # repo_gpgcheck: yes
     file: "pgdg-redhat-all"
+    exclude: "etcd*"
   - name: "pgdg{{ linux_pg_version }}"
     description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
     baseurl: "https://download.postgresql.org/pub/repos/yum/{{ linux_pg_version }}/redhat/rhel-$releasever-$basearch"
