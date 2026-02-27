@@ -1,6 +1,6 @@
 ---
 - name: Ensure sysstat is installed
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name: sysstat
     state: "{{ linux_package_state }}"
 
