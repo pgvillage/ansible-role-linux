@@ -1,0 +1,14 @@
+---
+
+- name: Add IP Addresses of all hosts to all hosts
+  local_action: lineinfile
+  args:
+    dest: /etc/hosts
+    regexp: '.*{{ hostvars[item].ansible_hostname }}$'
+    line: >-
+      {%- set hv = hostvars[item] -%}
+      {{ "%-15s" | format(hv.ansible_host) }} {{ hv.ansible_fqdn }} {{ hv.ansible_hostname }}
+    state: present
+  loop: '{{ groups.all }}'
+  when:
+    - "item not in groups.localhosts"

@@ -125,3 +125,7 @@ linux_rh_misc_repo: {}
 #  sslclientkey: /etc/pki/entitlement/8675925567367701300-key.pem
 #  sslclientcert: /etc/pki/entitlement/8675925567367701300.pem
 #  priority: "20"
+
+# By enabling linux_poor_mans_dns, PgVillage will add entries to /etc/hosts for all hosts (except the ansible host)
+# on all hosts
+linux_poor_mans_dns: false
