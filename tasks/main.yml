@@ -7,3 +7,6 @@
   when: ansible_pkg_mgr in ['yum', 'dnf']
 - name: Users
   ansible.builtin.include_tasks: users.yml
+- name: Poor mans DNS
+  ansible.builtin.include_tasks: poor_mans_dns.yml
+  when: linux_poor_mans_dns
