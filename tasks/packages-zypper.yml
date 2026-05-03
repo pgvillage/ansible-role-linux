@@ -1,0 +1,12 @@
+---
+- name: Add repository # noqa: args[module]
+  ansible.builtin.zypper_repository: "{{ item }}"
+  loop: "{{ linux_public_repos }}"
+
+- name: Upgrade all packages
+  ansible.builtin.package:
+    name: "*"
+    state: "{{ linux_package_state }}"
+  when: linux_package_state == 'latest'
+  async: 600
+  poll: 5

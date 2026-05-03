@@ -57,47 +57,70 @@ linux_packages:
   localhosts:
     - "chainsmith"
 
-linux_public_repos:
-  - name: PgVillage
-    description: PgVillage RPM Library - RHEL $releasever - $basearch
-    baseurl: https://repo.mannemsolutions.nl/yum/pgvillage/latest/el$releasever/$basearch
-    gpgkey: https://repo.mannemsolutions.nl/yum/pgvillage/gpg_pubkey.asc
-    gpgcheck: true
-    file: pgvillage
-  - name: "pgdg-common"
-    description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
-    baseurl: https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-$releasever-$basearch
-    enabled: true
-    gpgcheck: true
-    gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
-    # repo_gpgcheck: yes
-    file: "pgdg-redhat-all"
-    exclude: etcd
-  - name: "pgdg-rhel-extras"
-    description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
-    baseurl: https://download.postgresql.org/pub/repos/yum/extras/redhat/rhel-$releasever-$basearch/
-    enabled: true
-    gpgcheck: true
-    gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
-    # repo_gpgcheck: yes
-    file: "pgdg-redhat-all"
-    exclude: "etcd*"
-  - name: "pgdg{{ linux_pg_version }}"
-    description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
-    baseurl: "https://download.postgresql.org/pub/repos/yum/{{ linux_pg_version }}/redhat/rhel-$releasever-$basearch"
-    enabled: true
-    gpgcheck: true
-    gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
-    # repo_gpgcheck: yes
-    file: "pgdg-redhat-all"
-  - name: "epel"
-    description: "Extra Packages for Enterprise Linux {{ ansible_distribution_major_version }} - $basearch"
-    metalink: "https://mirrors.fedoraproject.org/metalink?repo=epel-9&arch=$basearch&infra=$infra&content=$contentdir"
-    enabled: true
-    gpgcheck: "yes"
-    gpgkey: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"
-    # repo_gpgcheck: yes
-    file: "epel"
+linux_public_repos: "{{ _linux_public_repos[ansible_pkg_mgr] }}"
+
+_linux_public_repos:
+  dnf:
+    - name: PgVillage
+      description: PgVillage RPM Library - RHEL $releasever - $basearch
+      baseurl: https://repo.mannemsolutions.nl/yum/pgvillage/latest/el$releasever/$basearch
+      gpgkey: https://repo.mannemsolutions.nl/yum/pgvillage/gpg_pubkey.asc
+      gpgcheck: true
+      file: pgvillage
+    - name: "pgdg-common"
+      description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
+      baseurl: https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-$releasever-$basearch
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+      exclude: etcd
+    - name: "pgdg-rhel-extras"
+      description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
+      baseurl: https://download.postgresql.org/pub/repos/yum/extras/redhat/rhel-$releasever-$basearch/
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+      exclude: "etcd*"
+    - name: "pgdg{{ linux_pg_version }}"
+      description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
+      baseurl: "https://download.postgresql.org/pub/repos/yum/{{ linux_pg_version }}/redhat/rhel-$releasever-$basearch"
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_pgdg_gpg_key[ansible_architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+    - name: "epel"
+      description: "Extra Packages for Enterprise Linux {{ ansible_distribution_major_version }} - $basearch"
+      metalink: "https://mirrors.fedoraproject.org/metalink?repo=epel-9&arch=$basearch&infra=$infra&content=$contentdir"
+      enabled: true
+      gpgcheck: "yes"
+      gpgkey: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"
+      # repo_gpgcheck: yes
+      file: "epel"
+  zypper:
+    - name: PgVillage
+      description: PgVillage RPM Library - RHEL $releasever - $basearch
+      repo: https://repo.mannemsolutions.nl/zypp/latest/{{ ansible_distribution_major_version }}/$basearch
+      priority: 10
+    - name: "pgdg-common"
+      description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
+      repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse//leap-{{ ansible_distribution_version }}-{{ ansible_architecture }}/
+      enabled: true
+      priority: 20
+    - name: "pgdg-rhel-extras"
+      description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
+      repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse//leap-{{ ansible_distribution_version }}-{{ ansible_architecture }}/
+      enabled: true
+      priority: 20
+    - name: "pgdg{{ linux_pg_version }}"
+      description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
+      repo: https://download.postgresql.org/pub/repos/zypp/{{ ansible_distribution_major_version }}/opensuse/leap-{{ ansible_distribution_version }}-{{ ansible_architecture }}/
+      enabled: true
+      priority: 20
 
 linux_disable_gpg_check: "false"
 
