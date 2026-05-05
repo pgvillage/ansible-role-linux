@@ -119,14 +119,14 @@ _linux_public_repos:
       priority: 20
     - name: "pgdg{{ linux_pg_version }}"
       description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
-      repo: "https://download.postgresql.org/pub/repos/zypp/{{ ansible_distribution_major_version }}/opensuse/\
+      repo: "https://download.postgresql.org/pub/repos/zypp/{{ linux_pg_version }}/opensuse/\
         leap-{{ ansible_distribution_version }}-{{ ansible_architecture }}/"
       enabled: true
       priority: 20
 
 linux_disable_gpg_check: "false"
 
-linux_gpg_key:
+linux_gpg_keys:
   dnf:
     x86_64: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
     aarch64: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-AARCH64-RHEL

@@ -1,6 +1,11 @@
 ---
 - name: Packages
   ansible.builtin.include_tasks: "packages-{{ ansible_pkg_mgr }}.yml"
+- name: OS specifics
+  ansible.builtin.include_tasks: "{{ tasks_file }}"
+  when: query('file', tasks_file) | length > 0
+  vars:
+    tasks_file: "os-specifics-{{ ansible_os_family }}.yml"
 - name: Install sysstat
   ansible.builtin.include_tasks: sysstat.yml
 - name: Users
