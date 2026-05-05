@@ -1,6 +1,6 @@
 ---
 - name: Add repository # noqa: args[module]
-  ansible.builtin.zypper_repository: "{{ item }}"
+  community.general.zypper_repository: "{{ item }}"
   loop: "{{ linux_public_repos }}"
 
 - name: Import PostgreSQL GPG key

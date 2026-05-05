@@ -119,7 +119,8 @@ _linux_public_repos:
       priority: 20
     - name: "pgdg{{ linux_pg_version }}"
       description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
-      repo: https://download.postgresql.org/pub/repos/zypp/{{ ansible_distribution_major_version }}/opensuse/leap-{{ ansible_distribution_version }}-{{ ansible_architecture }}/
+      repo: "https://download.postgresql.org/pub/repos/zypp/{{ ansible_distribution_major_version }}/opensuse/\
+        leap-{{ ansible_distribution_version }}-{{ ansible_architecture }}/"
       enabled: true
       priority: 20
 
