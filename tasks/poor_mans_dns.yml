@@ -3,10 +3,10 @@
 - name: Add IP Addresses of all hosts to all hosts
   ansible.builtin.lineinfile:
     dest: /etc/hosts
-    regexp: '.*{{ hostvars[item].ansible_hostname }}$'
+    regexp: '.*{{ hostvars[item].ansible_facts.hostname }}$'
     line: >-
       {%- set hv = hostvars[item] -%}
-      {{ "%-15s" | format(hv.ansible_host) }} {{ hv.ansible_fqdn }} {{ hv.ansible_hostname }}
+      {{ "%-15s" | format(hv.ansible_facts.host) }} {{ hv.ansible_facts.fqdn }} {{ hv.ansible_facts.hostname }}
     state: present
   loop: '{{ groups.all }}'
   delegate_to: localhost
