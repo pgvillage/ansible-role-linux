@@ -1,0 +1,18 @@
+---
+# not there by default on suse
+
+- name: Install cron
+  ansible.builtin.package:
+    name: cron
+    state: present
+
+- name: Run cron
+  ansible.builtin.service:
+    name: cron
+    state: started
+    enabled: true
+
+- name: We need acl for ansible to set permissions when become_user is not root
+  community.general.zypper:
+    name: acl
+    state: present

@@ -1,0 +1,26 @@
+---
+- name: Add repository # noqa: args[module]
+  community.general.zypper_repository: "{{ item }}"
+  loop: "{{ linux_public_repos }}"
+
+- name: Import PostgreSQL GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ item }}"
+  loop: "{{ linux_zypper_gpg_keys }}"
+
+- name: Upgrade all packages
+  ansible.builtin.package:
+    name: "*"
+    state: "{{ linux_package_state }}"
+  when: linux_package_state == 'latest'
+  async: 600
+  poll: 5
+
+- name: Install packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: "{{ linux_package_state }}"
+    update_cache: "true"
+    disable_gpg_check: "{{ linux_disable_gpg_check }}"
+  loop: "{{ linux_packages | bygroup(group_names) }}"
