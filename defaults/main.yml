@@ -41,21 +41,48 @@ linux_rhsm_poolids: {}
 #    # rhel_misc
 #    - "0360c0e47b1a20e9017b81870656140a"
 
+linux_architecture: "{{ linux_architectures[ansible_facts.architecture] }}"
+
 linux_package_state: present
-linux_packages:
-  hacluster:
-    - "postgresql{{ linux_pg_version | replace('.', '') }}"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-server"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-contrib"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-devel"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-plpython3"
-    - "stolon"
-    - "wal-g-pg"
-    - "etcd"
-  backup:
-    - "minio"
-  localhosts:
-    - "chainsmith"
+
+linux_packages: "{{ _linux_packages[ansible_facts.pkg_mgr] }}"
+
+_linux_packages:
+  apt:
+    hacluster:
+      - "postgresql-{{ linux_pg_version | replace('.', '') }}"
+      - "stolon"
+      - "wal-g-pg"
+      - "etcd"
+    backup:
+      - "minio"
+    localhosts:
+      - "chainsmith"
+  dnf:
+    hacluster:
+      - "postgresql{{ linux_pg_version | replace('.', '') }}"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-server"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-contrib"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-devel"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-plpython3"
+      - "stolon"
+      - "wal-g-pg"
+      - "etcd"
+    backup:
+      - "minio"
+    localhosts:
+      - "chainsmith"
+  zypper:
+    hacluster:
+      - "postgresql{{ linux_pg_version | replace('.', '') }}"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-server"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-contrib"
+      - "stolon"
+      - "wal-g-pg"
+      - "etcd"
+      - "python3-psycopg2"
+    backup:
+      - "minio"
 
 linux_public_repos: "{{ _linux_public_repos[ansible_facts.pkg_mgr] }}"
 
@@ -123,6 +150,18 @@ _linux_public_repos:
         leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/"
       enabled: true
       priority: 20
+  apt:
+    - name: PgVillage
+      description: "PgVillage DEB Library - Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
+      repo: |
+        [signed-by=/etc/apt/keyrings/pgvillage.asc arch={{ linux_architecture }}] https://repo.mannemsolutions.nl/apt/latest  {{ ansible_facts.distribution_release }} main
+      priority: 10
+    - name: "pgdg{{ linux_pg_version }}"
+      description: "PostgreSQL {{ linux_pg_version }} for Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
+      repo: |
+        [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt {{ ansible_facts.distribution_release }}-pgdg main
+      enabled: true
+      priority: 20
 
 linux_disable_gpg_check: "false"
 
@@ -135,6 +174,9 @@ linux_gpg_keys:
   zypper:
     sles15: https://download.postgresql.org/pub/repos/zypp/keys/PGDG-RPM-GPG-KEY-SLES15
     sles16: https://download.postgresql.org/pub/repos/zypp/keys/PGDG-RPM-GPG-KEY-SLES16
+  apt:
+    postgresql: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    pgvillage: https://repo.mannemsolutions.nl/apt/pgvillage.asc
 
 linux_zypper_gpg_keys:
   - "{{ linux_gpg_keys.zypper.sles16 }}"

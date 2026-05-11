@@ -1,0 +1,29 @@
+---
+
+- name: Download PostgreSQL GPG key
+  ansible.builtin.get_url:
+    url: "{{ item.value }}"
+    dest: "/etc/apt/keyrings/{{ item.key }}.asc"
+    mode: '0644'
+  loop: "{{ linux_gpg_keys.apt | dict2items }}"
+
+- name: Add specified repository into sources list
+  ansible.builtin.apt_repository:
+    repo: "deb {{ item.repo }}"
+    state: present
+  loop: "{{ linux_public_repos }}"
+
+- name: Upgrade all packages
+  ansible.builtin.package:
+    name: "*"
+    state: "{{ linux_package_state }}"
+  when: linux_package_state == 'latest'
+  async: 600
+  poll: 5
+
+- name: Install packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: "{{ linux_package_state }}"
+    update_cache: "true"
+  loop: "{{ linux_packages | bygroup(group_names) }}"
