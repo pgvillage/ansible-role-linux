@@ -1,4 +1,6 @@
 ---
+- name: Users
+  ansible.builtin.include_tasks: users.yml
 - name: Packages
   ansible.builtin.include_tasks: "packages-{{ ansible_facts.pkg_mgr }}.yml"
 - name: OS specifics
@@ -8,8 +10,6 @@
     tasks_file: "os-specifics-{{ ansible_facts.os_family }}.yml"
 - name: Install sysstat
   ansible.builtin.include_tasks: sysstat.yml
-- name: Users
-  ansible.builtin.include_tasks: users.yml
 - name: Poor mans DNS
   ansible.builtin.include_tasks: poor_mans_dns.yml
   when: linux_poor_mans_dns
