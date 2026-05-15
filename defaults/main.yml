@@ -72,7 +72,7 @@ _linux_public_repos:
       baseurl: https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-$releasever-$basearch
       enabled: true
       gpgcheck: true
-      gpgkey: "{{ linux_gpg_key.dnf[ansible_facts.architecture] }}"
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
       # repo_gpgcheck: yes
       file: "pgdg-redhat-all"
       exclude: etcd
@@ -81,7 +81,7 @@ _linux_public_repos:
       baseurl: https://download.postgresql.org/pub/repos/yum/extras/redhat/rhel-$releasever-$basearch/
       enabled: true
       gpgcheck: true
-      gpgkey: "{{ linux_gpg_key.dnf[ansible_facts.architecture] }}"
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
       # repo_gpgcheck: yes
       file: "pgdg-redhat-all"
       exclude: "etcd*"
@@ -90,7 +90,7 @@ _linux_public_repos:
       baseurl: "https://download.postgresql.org/pub/repos/yum/{{ linux_pg_version }}/redhat/rhel-$releasever-$basearch"
       enabled: true
       gpgcheck: true
-      gpgkey: "{{ linux_gpg_key.dnf[ansible_facts.architecture] }}"
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
       # repo_gpgcheck: yes
       file: "pgdg-redhat-all"
     - name: "epel"
