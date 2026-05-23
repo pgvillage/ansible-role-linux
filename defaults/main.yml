@@ -8,6 +8,8 @@ linux_users:
     - name: postgres
       system: true
 #      uid: 26
+    - name: pgbouncer
+      system: true
     - name: avchecker
       system: true
     - name: pgquartz
