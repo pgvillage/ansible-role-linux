@@ -7,7 +7,7 @@ linux_users:
   hacluster:
     - name: postgres
       system: true
-      uid: 26
+#      uid: 26
     - name: avchecker
       system: true
     - name: pgquartz
@@ -24,7 +24,7 @@ linux_groups:
   hacluster:
     - name: postgres
       system: true
-      gid: 26
+#      gid: 26
   backup:
     - name: minio
       system: true
@@ -76,6 +76,7 @@ _linux_packages:
       - "wal-g-pg"
       - "etcd"
     backup:
+      - "acl"
       - "minio"
     localhosts:
       - "chainsmith"
