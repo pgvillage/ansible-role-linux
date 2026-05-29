@@ -140,7 +140,11 @@ _linux_public_repos:
       priority: 20
     - name: "pgdg{{ linux_pg_version }}"
       description: "PostgreSQL {{ linux_pg_version }} for openSUSE Leap"
-      repo: "https://download.postgresql.org/pub/repos/zypp/{{ linux_pg_version }}/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/"
+      repo: >-
+        https://download.postgresql.org/pub/repos/zypp/{{
+        linux_pg_version }}/opensuse/leap-{{
+        ansible_facts.distribution_version }}-{{
+        ansible_facts.architecture }}/
       enabled: true
       priority: 20
 
