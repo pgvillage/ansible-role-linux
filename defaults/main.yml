@@ -42,20 +42,41 @@ linux_rhsm_poolids: {}
 #    - "0360c0e47b1a20e9017b81870656140a"
 
 linux_package_state: present
-linux_packages:
-  hacluster:
-    - "postgresql{{ linux_pg_version | replace('.', '') }}"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-server"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-contrib"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-devel"
-    - "postgresql{{ linux_pg_version | replace('.', '') }}-plpython3"
-    - "stolon"
-    - "wal-g-pg"
-    - "etcd"
-  backup:
-    - "minio"
-  localhosts:
-    - "chainsmith"
+linux_packages: >-
+  {{
+    _linux_packages.default
+    | combine(_linux_packages[ansible_facts.pkg_mgr], recursive=True)
+  }}
+
+_linux_packages:
+  default:
+    hacluster:
+      - "postgresql{{ linux_pg_version | replace('.', '') }}"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-server"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-contrib"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-devel"
+      - "postgresql{{ linux_pg_version | replace('.', '') }}-plpython3"
+      - "stolon"
+      - "wal-g-pg"
+      - "etcd"
+
+    backup:
+      - "minio"
+
+    localhosts:
+      - "chainsmith"
+
+  dnf:
+    hacluster:
+      - glibc-all-langpacks
+      - langpacks-en
+
+  zypper:
+    hacluster:
+      - glibc-locale
+      - glibc-locale-base
+      - openssl
+
 
 linux_public_repos: "{{ _linux_public_repos[ansible_facts.pkg_mgr] }}"
 
@@ -109,18 +130,21 @@ _linux_public_repos:
       disable_gpg_check: true
     - name: "pgdg-common"
       description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
-      repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse//leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
+      repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
     - name: "pgdg-rhel-extras"
       description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
-      repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse//leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
+      repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
     - name: "pgdg{{ linux_pg_version }}"
-      description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
-      repo: "https://download.postgresql.org/pub/repos/zypp/{{ linux_pg_version }}/opensuse/\
-        leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/"
+      description: "PostgreSQL {{ linux_pg_version }} for openSUSE Leap"
+      repo: >-
+        https://download.postgresql.org/pub/repos/zypp/{{
+        linux_pg_version }}/opensuse/leap-{{
+        ansible_facts.distribution_version }}-{{
+        ansible_facts.architecture }}/
       enabled: true
       priority: 20
 
