@@ -130,7 +130,7 @@ _linux_public_repos:
       disable_gpg_check: true
     - name: "pgdg-common"
       description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
-      repo: https://download.postgresql.org/pub/repos/zypp/16/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
+      repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
     - name: "pgdg-rhel-extras"
