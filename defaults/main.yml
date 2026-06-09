@@ -167,8 +167,11 @@ _linux_public_repos:
   apt:
     - name: PgVillage
       description: "PgVillage DEB Library - Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
-      repo: |
-        [signed-by=/etc/apt/keyrings/pgvillage.asc arch={{ linux_architecture }}] https://repo.mannemsolutions.nl/apt/latest  {{ ansible_facts.distribution_release }} main
+      repo: >-
+        [signed-by=/etc/apt/keyrings/pgvillage.asc arch={{ linux_architecture }}]
+        https://repo.mannemsolutions.nl/apt/latest
+        {{ ansible_facts.distribution_release }}
+        main
       priority: 10
     - name: "pgdg{{ linux_pg_version }}"
       description: "PostgreSQL {{ linux_pg_version }} for Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
