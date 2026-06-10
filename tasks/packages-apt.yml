@@ -1,5 +1,29 @@
 ---
 
+- name: PostgreSQL system config folder
+  ansible.builtin.file:
+    state: directory
+    dest: /etc/postgresql-common
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Disable autostart of servicesm and cluster creation
+  ansible.builtin.copy:
+    dest: /usr/sbin/policy-rc.d
+    content: |
+      exit 101
+    owner: root
+    group: root
+    mode: "0755"
+  loop: '{{ files | dict2items }}'
+  vars:
+    files:
+      "/usr/sbin/policy-rc.d": |
+        exit 101
+      "/etc/postgresql-common/createcluster.conf": |
+        create_main_cluster = false
+
 - name: Download PostgreSQL GPG key
   ansible.builtin.get_url:
     url: "{{ item.value }}"
