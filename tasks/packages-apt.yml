@@ -8,11 +8,10 @@
     group: root
     mode: "0755"
 
-- name: Disable autostart of servicesm and cluster creation
+- name: Disable autostart of services and cluster creation
   ansible.builtin.copy:
-    dest: /usr/sbin/policy-rc.d
-    content: |
-      exit 101
+    dest: "{{ item.key }}"
+    content: "{{ item.value }}"
     owner: root
     group: root
     mode: "0755"
