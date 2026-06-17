@@ -6,9 +6,11 @@ linux_pg_version: "17"
 linux_users:
   hacluster:
     - name: postgres
+      shell: /bin/bash
       system: true
 #      uid: 26
     - name: pgbouncer
+      shell: /bin/bash
       system: true
     - name: avchecker
       system: true
