@@ -56,3 +56,6 @@
     name: postgresql.service
     state: stopped
     enabled: "false"
+  vars:
+    packages: "{{ linux_packages | bygroup(group_names) }}"
+  when: packages|select('search', '^postgresql')|list|length > 0
