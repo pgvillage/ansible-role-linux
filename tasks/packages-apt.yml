@@ -50,3 +50,9 @@
     state: "{{ linux_package_state }}"
     update_cache: "true"
   loop: "{{ linux_packages | bygroup(group_names) }}"
+
+- name: The ubuntu package system starting services is a disaster
+  ansible.builtin.systemd:
+    name: postgresql.service
+    state: stopped
+    enabled: "false"
