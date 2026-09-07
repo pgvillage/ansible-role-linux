@@ -23,6 +23,13 @@ linux_users:
   backup:
     - name: minio
       system: true
+  router:
+    - name: haproxy
+      system: true
+    - name: keepalived
+      system: true
+    - name: pgroute66
+      system: true
 
 linux_groups:
   hacluster:
@@ -31,6 +38,9 @@ linux_groups:
 #      gid: 26
   backup:
     - name: minio
+      system: true
+  router:
+    - name: pgroute66
       system: true
 
 # You can define what RH products should be enabled for a group of servers
@@ -68,6 +78,11 @@ _linux_packages:
 
     backup:
       - "minio"
+
+    router:
+      - keepalived
+      - haproxy
+      - pgroute66
 
     localhosts:
       - "chainsmith"
