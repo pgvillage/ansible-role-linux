@@ -1,8 +1,16 @@
 ---
 # defaults file for generic linux role for postgres servers
+#
+# Several variables below (linux_users, linux_groups, linux_packages) are hashes keyed by inventory group name.
+# The custom `bygroup` filter (see filter_plugins/core.py) flattens such a hash into a single (deduplicated) list,
+# containing only the items of the groups the current host is a member of (group_names).
 
+# Major version of PostgreSQL to install (e.g. "16", "17").
+# Used to derive package names and the PGDG repositories to configure. Dots are stripped for package names.
 linux_pg_version: "17"
 
+# OS users to create, per inventory group.
+# Every item is passed as-is to ansible.builtin.user, so any option of that module (uid, shell, home, ...) can be set.
 linux_users:
   hacluster:
     - name: postgres
@@ -31,6 +39,8 @@ linux_users:
     - name: pgroute66
       system: true
 
+# OS groups to create, per inventory group. Groups are created before users.
+# Every item is passed as-is to ansible.builtin.group, so any option of that module (gid, system, ...) can be set.
 linux_groups:
   hacluster:
     - name: postgres
@@ -43,15 +53,26 @@ linux_groups:
     - name: pgroute66
       system: true
 
+# Debian style architecture name (amd64 / arm64) of the host, derived from ansible_facts.architecture
+# using the linux_architectures mapping in vars/main.yml. Used in the apt repository definitions.
 linux_architecture: "{{ linux_architectures[ansible_facts.architecture] }}"
 
+# State of the packages to install: `present` (default) or `latest`.
+# When set to `latest`, all packages on the system are upgraded as well.
 linux_package_state: present
+
+# Packages to install, per inventory group.
+# By default this is the `default` set of _linux_packages, merged with the set for the package manager of the host
+# (apt, dnf or zypper). Note that the merge replaces lists: if a package manager defines a list for a group,
+# that list is used instead of the default list for that group.
 linux_packages: >-
   {{
     _linux_packages.default
     | combine(_linux_packages[ansible_facts.pkg_mgr], recursive=True)
   }}
 
+# Internal: package lists per package manager (default, apt, dnf, zypper) and per inventory group.
+# Used to derive linux_packages. Override linux_packages rather than this variable.
 _linux_packages:
   default:
     hacluster:
@@ -99,9 +120,13 @@ _linux_packages:
       - glibc-locale-base
       - openssl
 
-
+# Package repositories to configure, selected from _linux_public_repos by the package manager of the host.
+# Items are passed as-is to ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper).
+# For apt only the `repo` field is used (prefixed with `deb `) by ansible.builtin.apt_repository.
 linux_public_repos: "{{ _linux_public_repos[ansible_facts.pkg_mgr] }}"
 
+# Internal: repository definitions per package manager (dnf, zypper, apt): the PgVillage repository and the
+# PostgreSQL PGDG repositories (plus EPEL for dnf). Override linux_public_repos rather than this variable.
 _linux_public_repos:
   dnf:
     - name: PgVillage
@@ -185,8 +210,14 @@ _linux_public_repos:
       enabled: true
       priority: 20
 
+# Disable GPG signature checking when installing packages (dnf and zypper only).
 linux_disable_gpg_check: "false"
 
+# GPG keys per package manager:
+# - dnf: PGDG keys per architecture (as reported by ansible_facts.architecture) and the EPEL key,
+#   referenced by the dnf repositories in _linux_public_repos
+# - zypper: PGDG keys per SLES version, referenced by linux_zypper_gpg_keys
+# - apt: all keys are downloaded to /etc/apt/keyrings/<key>.asc and referenced with signed-by in the apt repositories
 linux_gpg_keys:
   dnf:
     x86_64: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
@@ -200,16 +231,22 @@ linux_gpg_keys:
     postgresql: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     pgvillage: https://repo.mannemsolutions.nl/apt/pgvillage.asc
 
+# List of GPG keys (urls or paths) to import into the rpm keyring on zypper based systems.
 linux_zypper_gpg_keys:
   - "{{ linux_gpg_keys.zypper.sles16 }}"
 
+# Red Hat subscription (Satellite) configuration for dnf based systems.
+# When set, the system is registered with community.general.redhat_subscription using activationkey, org_id
+# and pool_ids, linux_rh_misc_repo is configured (if set) and subscriptions are (auto-)attached.
+# Leave empty ({}) to skip Red Hat subscription management.
 linux_rh_subscription: {}
 #  activationkey: "ORG1"
 #  org_id: "ORG1"
-#  pool_ids: "{}"
+#  pool_ids: []
 #  state: present
 
-# repository rhel_misc
+# Additional (Satellite hosted) yum repository to configure when linux_rh_subscription is set.
+# All keys in the example below are required. Leave empty ({}) to skip.
 linux_rh_misc_repo: {}
 #  name: "Rhel_Misc"
 #  description: "Rhel Misc repository"
@@ -223,6 +260,7 @@ linux_rh_misc_repo: {}
 #  sslclientcert: /etc/pki/entitlement/8675925567367701300.pem
 #  priority: "20"
 
-# By enabling linux_poor_mans_dns, PgVillage will add entries to /etc/hosts for all hosts (except the ansible host)
-# on all hosts
+# By enabling linux_poor_mans_dns, PgVillage will add an entry (ip, fqdn and hostname) to /etc/hosts
+# for all hosts in the inventory, except the hosts in the `localhosts` group.
+# Note that the task is delegated to localhost, so the entries are added to /etc/hosts on the Ansible controller.
 linux_poor_mans_dns: false
