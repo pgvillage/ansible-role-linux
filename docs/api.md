@@ -7,7 +7,7 @@ The role:
 
 - creates OS groups and users ([tasks/users.yml](../tasks/users.yml))
 - configures package repositories and installs packages for the package manager of the host
-  (`apt`, `dnf` or `zypper`)
+  (`apt`, `dnf` or `zypper`), including one or more PostgreSQL versions side by side (`linux_pg_versions`)
 - applies OS family specific tasks (if available)
 - installs sysstat
 - optionally adds all inventory hosts to `/etc/hosts` (poor man's DNS)
@@ -45,6 +45,27 @@ linux_users:
 A host in the `hacluster` group gets the `postgres` user, a host in the `backup` group gets the `minio` user,
 and a host in both groups gets both.
 
+## Version specific variables
+
+The custom `pg_versioned` filter ([filter_plugins/core.py](../filter_plugins/core.py)) renders a list of templates
+once for every PostgreSQL version in a list of versions, and returns all results as a single list.
+In strings `{version}` is replaced by the version (e.g. `17` or `9.6`) and `{short}` by the version without dots
+(e.g. `17` or `96`). Dicts and lists are rendered recursively, so it works for package names as well as repository
+definitions. The role uses it to derive `linux_packages` from `_linux_pg_packages` and `linux_public_repos` from
+`_linux_pg_repos`.
+
+When overriding `linux_packages` or `linux_public_repos`, the filter can be used to keep installing all versions in
+`linux_pg_versions`. Example:
+
+```yaml
+linux_pg_versions: ["16", "17"]
+linux_packages:
+  hacluster: "{{ ['postgresql{short}-server', 'postgresql{short}-contrib'] | pg_versioned(linux_pg_versions) }}"
+```
+
+Results in `postgresql16-server`, `postgresql16-contrib`, `postgresql17-server` and `postgresql17-contrib`
+for hosts in the `hacluster` group.
+
 ## Variables
 
 ### General
@@ -54,8 +75,17 @@ and a host in both groups gets both.
 - **Type:** string
 - **Default:** `"17"`
 
-Major version of PostgreSQL to install (e.g. `"16"`, `"17"`).
-Used to derive package names and the PGDG repositories to configure. Dots are stripped for package names.
+The primary PostgreSQL major version (e.g. `"16"`, `"17"`), kept for backwards compatibility and for roles that
+need a single version. Within this role it is only used as the default for `linux_pg_versions`.
+
+#### `linux_pg_versions`
+
+- **Type:** list of strings
+- **Default:** `["{{ linux_pg_version }}"]`
+
+All PostgreSQL major versions to install side by side (e.g. `["16", "17"]` during a major upgrade).
+Used to derive the PostgreSQL package names (see `_linux_pg_packages`) and the version specific PGDG repositories
+(see `_linux_pg_repos`) to configure. Must be a non-empty list; the role fails otherwise.
 
 ### Users and groups
 
@@ -107,13 +137,13 @@ State of the packages to install. When set to `latest`, all packages on the syst
 #### `linux_packages`
 
 - **Type:** dict of lists (keyed by inventory group)
-- **Default:** `_linux_packages.default` merged with `_linux_packages[ansible_facts.pkg_mgr]`
+- **Default:** `_linux_packages.default` with `_linux_packages[ansible_facts.pkg_mgr]` and the PostgreSQL packages
+  from `_linux_pg_packages` appended
 
 Packages to install, per inventory group.
-By default this is the `default` set of `_linux_packages`, merged with the set for the package manager of the host
-(`apt`, `dnf` or `zypper`).
-Note that the merge replaces lists: if a package manager defines a list for a group, that list is used instead of
-the default list for that group.
+By default this is the `default` set of `_linux_packages`, with the set for the package manager of the host
+(`apt`, `dnf` or `zypper`) appended per group, plus the PostgreSQL packages (`_linux_pg_packages`) for every version
+in `linux_pg_versions` appended to the `hacluster` group.
 
 #### `_linux_packages` (internal)
 
@@ -124,25 +154,39 @@ Override `linux_packages` rather than this variable.
 
 | Package manager | Group        | Packages |
 |-----------------|--------------|----------|
-| `default`       | `hacluster`  | `postgresql<version>`, `postgresql<version>-server`, `-contrib`, `-devel`, `-plpython3`, `stolon`, `wal-g-pg`, `etcd` |
+| `default`       | `hacluster`  | `stolon`, `wal-g-pg`, `etcd` |
 | `default`       | `backup`     | `minio` |
 | `default`       | `router`     | `keepalived`, `haproxy`, `pgroute66` |
 | `default`       | `localhosts` | `chainsmith` |
-| `apt`           | `hacluster`  | `acl`, `postgresql-<version>`, `stolon`, `wal-g-pg`, `etcd` |
-| `apt`           | `backup`     | `acl`, `minio` |
-| `apt`           | `localhosts` | `chainsmith` |
+| `apt`           | `hacluster`  | `acl` |
+| `apt`           | `backup`     | `acl` |
 | `dnf`           | `hacluster`  | `glibc-all-langpacks`, `langpacks-en` |
 | `zypper`        | `hacluster`  | `glibc-locale`, `glibc-locale-base`, `openssl` |
 
 On Debian based systems, the role prevents the packaging system from automatically starting services and creating
 a default PostgreSQL cluster, and stops / disables `postgresql.service` when PostgreSQL packages are installed.
 
+#### `_linux_pg_packages` (internal)
+
+- **Type:** dict (package manager → list of package name templates)
+
+PostgreSQL packages per package manager, added to the `hacluster` group of `linux_packages` once for every version
+in `linux_pg_versions`. Package managers without an entry use the `default` list.
+`{version}` is replaced by the version (e.g. `9.6`) and `{short}` by the version without dots (e.g. `96`).
+Override `linux_packages` rather than this variable.
+
+| Package manager | Packages |
+|-----------------|----------|
+| `default`       | `postgresql{short}`, `postgresql{short}-server`, `-contrib`, `-devel`, `-plpython3` |
+| `apt`           | `postgresql-{version}` |
+
 ### Repositories
 
 #### `linux_public_repos`
 
 - **Type:** list of dicts
-- **Default:** `_linux_public_repos[ansible_facts.pkg_mgr]`
+- **Default:** `_linux_public_repos[ansible_facts.pkg_mgr]` plus `_linux_pg_repos[ansible_facts.pkg_mgr]` for every
+  version in `linux_pg_versions`
 
 Package repositories to configure, selected from `_linux_public_repos` by the package manager of the host.
 Items are passed as-is to
@@ -150,6 +194,7 @@ Items are passed as-is to
 [`community.general.zypper_repository`](https://docs.ansible.com/ansible/latest/collections/community/general/zypper_repository_module.html) (zypper).
 For apt only the `repo` field is used (prefixed with `deb `) by
 [`ansible.builtin.apt_repository`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_repository_module.html).
+The version specific PGDG repositories from `_linux_pg_repos` are appended for every version in `linux_pg_versions`.
 
 #### `_linux_public_repos` (internal)
 
@@ -159,9 +204,24 @@ Repository definitions per package manager. Override `linux_public_repos` rather
 
 | Package manager | Repositories |
 |-----------------|--------------|
-| `dnf`           | PgVillage, `pgdg-common`, `pgdg-rhel-extras`, `pgdg<version>`, `epel` |
-| `zypper`        | PgVillage, `pgdg-common`, `pgdg-rhel-extras`, `pgdg<version>` |
-| `apt`           | PgVillage, `pgdg<version>` |
+| `dnf`           | PgVillage, `pgdg-common`, `pgdg-rhel-extras`, `epel` |
+| `zypper`        | PgVillage, `pgdg-common`, `pgdg-rhel-extras` |
+| `apt`           | PgVillage, `pgdg` (serves all PostgreSQL versions) |
+
+#### `_linux_pg_repos` (internal)
+
+- **Type:** dict (package manager → list of repository definition templates)
+
+Version specific PGDG repositories per package manager, added to `linux_public_repos` once for every version in
+`linux_pg_versions`. `{version}` is replaced by the version (e.g. `17`).
+Override `linux_public_repos` rather than this variable.
+
+| Package manager | Repositories |
+|-----------------|--------------|
+| `dnf`           | `pgdg{version}` |
+| `zypper`        | `pgdg{version}` |
+
+apt has no entry, because apt.postgresql.org serves all versions from one repository.
 
 #### `linux_architecture`
 

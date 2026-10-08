@@ -1,4 +1,12 @@
 ---
+- name: Validate linux_pg_versions
+  ansible.builtin.assert:
+    that:
+      - linux_pg_versions is sequence
+      - linux_pg_versions is not string
+      - linux_pg_versions | length > 0
+    fail_msg: "linux_pg_versions should be a non-empty list, e.g. ['16', '17']"
+    quiet: true
 - name: Users
   ansible.builtin.include_tasks: users.yml
 - name: Packages

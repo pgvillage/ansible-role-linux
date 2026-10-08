@@ -5,9 +5,13 @@
 # The custom `bygroup` filter (see filter_plugins/core.py) flattens such a hash into a single (deduplicated) list,
 # containing only the items of the groups the current host is a member of (group_names).
 
-# Major version of PostgreSQL to install (e.g. "16", "17").
-# Used to derive package names and the PGDG repositories to configure. Dots are stripped for package names.
+# The primary PostgreSQL major version (e.g. "16", "17"), kept for backwards compatibility and for roles that need
+# a single version. Within this role it is only used as the default for linux_pg_versions.
 linux_pg_version: "17"
+# All PostgreSQL major versions to install side by side (e.g. ["16", "17"] during a major upgrade).
+# Used to derive the PostgreSQL package names and the version specific PGDG repositories to configure.
+linux_pg_versions:
+  - "{{ linux_pg_version }}"
 
 # OS users to create, per inventory group.
 # Every item is passed as-is to ansible.builtin.user, so any option of that module (uid, shell, home, ...) can be set.
@@ -62,25 +66,39 @@ linux_architecture: "{{ linux_architectures[ansible_facts.architecture] }}"
 linux_package_state: present
 
 # Packages to install, per inventory group.
-# By default this is the `default` set of _linux_packages, merged with the set for the package manager of the host
-# (apt, dnf or zypper). Note that the merge replaces lists: if a package manager defines a list for a group,
-# that list is used instead of the default list for that group.
+# By default this is the `default` set of _linux_packages, with the set for the package manager of the host
+# (apt, dnf or zypper) appended per group, plus the PostgreSQL packages (_linux_pg_packages) for every
+# version in linux_pg_versions appended to the hacluster group.
 linux_packages: >-
   {{
     _linux_packages.default
-    | combine(_linux_packages[ansible_facts.pkg_mgr], recursive=True)
+    | combine(_linux_packages[ansible_facts.pkg_mgr], recursive=True, list_merge='append')
+    | combine(
+        {'hacluster': _linux_pg_packages[ansible_facts.pkg_mgr]
+                      | default(_linux_pg_packages.default)
+                      | pg_versioned(linux_pg_versions)},
+        recursive=True, list_merge='append')
   }}
+
+# Internal: PostgreSQL packages per package manager (falls back to `default`), added to the hacluster group
+# once for every version in linux_pg_versions.
+# '{version}' is replaced by the version (e.g. 9.6) and '{short}' by the version without dots (e.g. 96)
+# Used to derive linux_packages. Override linux_packages rather than this variable.
+_linux_pg_packages:
+  default:
+    - "postgresql{short}"
+    - "postgresql{short}-server"
+    - "postgresql{short}-contrib"
+    - "postgresql{short}-devel"
+    - "postgresql{short}-plpython3"
+  apt:
+    - "postgresql-{version}"
 
 # Internal: package lists per package manager (default, apt, dnf, zypper) and per inventory group.
 # Used to derive linux_packages. Override linux_packages rather than this variable.
 _linux_packages:
   default:
     hacluster:
-      - "postgresql{{ linux_pg_version | replace('.', '') }}"
-      - "postgresql{{ linux_pg_version | replace('.', '') }}-server"
-      - "postgresql{{ linux_pg_version | replace('.', '') }}-contrib"
-      - "postgresql{{ linux_pg_version | replace('.', '') }}-devel"
-      - "postgresql{{ linux_pg_version | replace('.', '') }}-plpython3"
       - "stolon"
       - "wal-g-pg"
       - "etcd"
@@ -96,18 +114,12 @@ _linux_packages:
     localhosts:
       - "chainsmith"
 
+  # Package manager specific packages are appended to the default packages
   apt:
     hacluster:
       - "acl"
-      - "postgresql-{{ linux_pg_version | replace('.', '') }}"
-      - "stolon"
-      - "wal-g-pg"
-      - "etcd"
     backup:
       - "acl"
-      - "minio"
-    localhosts:
-      - "chainsmith"
 
   dnf:
     hacluster:
@@ -123,10 +135,40 @@ _linux_packages:
 # Package repositories to configure, selected from _linux_public_repos by the package manager of the host.
 # Items are passed as-is to ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper).
 # For apt only the `repo` field is used (prefixed with `deb `) by ansible.builtin.apt_repository.
-linux_public_repos: "{{ _linux_public_repos[ansible_facts.pkg_mgr] }}"
+# The version specific PGDG repositories from _linux_pg_repos are appended for every version in linux_pg_versions.
+linux_public_repos: >-
+  {{
+    _linux_public_repos[ansible_facts.pkg_mgr]
+    + (_linux_pg_repos[ansible_facts.pkg_mgr] | default([]) | pg_versioned(linux_pg_versions))
+  }}
+
+# Internal: version specific PostgreSQL repositories per package manager, added once for every version in
+# linux_pg_versions. '{version}' is replaced by the version (e.g. 17)
+# apt has no entry, because apt.postgresql.org serves all versions from one repository.
+# Override linux_public_repos rather than this variable.
+_linux_pg_repos:
+  dnf:
+    - name: "pgdg{version}"
+      description: "PostgreSQL {version} for RHEL / Rocky $releasever - $basearch"
+      baseurl: "https://download.postgresql.org/pub/repos/yum/{version}/redhat/rhel-$releasever-$basearch"
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+  zypper:
+    - name: "pgdg{version}"
+      description: "PostgreSQL {version} for openSUSE Leap"
+      repo: >-
+        https://download.postgresql.org/pub/repos/zypp/{version}/opensuse/leap-{{
+        ansible_facts.distribution_version }}-{{
+        ansible_facts.architecture }}/
+      enabled: true
+      priority: 20
 
 # Internal: repository definitions per package manager (dnf, zypper, apt): the PgVillage repository and the
-# PostgreSQL PGDG repositories (plus EPEL for dnf). Override linux_public_repos rather than this variable.
+# version independent PostgreSQL PGDG repositories (plus EPEL for dnf). Override linux_public_repos rather than
+# this variable.
 _linux_public_repos:
   dnf:
     - name: PgVillage
@@ -153,14 +195,6 @@ _linux_public_repos:
       # repo_gpgcheck: yes
       file: "pgdg-redhat-all"
       exclude: "etcd*"
-    - name: "pgdg{{ linux_pg_version }}"
-      description: "PostgreSQL {{ linux_pg_version }} for RHEL / Rocky $releasever - $basearch"
-      baseurl: "https://download.postgresql.org/pub/repos/yum/{{ linux_pg_version }}/redhat/rhel-$releasever-$basearch"
-      enabled: true
-      gpgcheck: true
-      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
-      # repo_gpgcheck: yes
-      file: "pgdg-redhat-all"
     - name: "epel"
       description: "Extra Packages for Enterprise Linux {{ ansible_facts.distribution_major_version }} - $basearch"
       metalink: "https://mirrors.fedoraproject.org/metalink?repo=epel-9&arch=$basearch&infra=$infra&content=$contentdir"
@@ -185,15 +219,6 @@ _linux_public_repos:
       repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
-    - name: "pgdg{{ linux_pg_version }}"
-      description: "PostgreSQL {{ linux_pg_version }} for openSUSE Leap"
-      repo: >-
-        https://download.postgresql.org/pub/repos/zypp/{{
-        linux_pg_version }}/opensuse/leap-{{
-        ansible_facts.distribution_version }}-{{
-        ansible_facts.architecture }}/
-      enabled: true
-      priority: 20
   apt:
     - name: PgVillage
       description: "PgVillage DEB Library - Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
@@ -203,8 +228,8 @@ _linux_public_repos:
         {{ ansible_facts.distribution_release }}
         main
       priority: 10
-    - name: "pgdg{{ linux_pg_version }}"
-      description: "PostgreSQL {{ linux_pg_version }} for Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
+    - name: "pgdg"
+      description: "PostgreSQL for Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
       repo: |
         [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt {{ ansible_facts.distribution_release }}-pgdg main
       enabled: true
