@@ -5,9 +5,11 @@
 # The custom `bygroup` filter (see filter_plugins/core.py) flattens such a hash into a single (deduplicated) list,
 # containing only the items of the groups the current host is a member of (group_names).
 
-# The primary PostgreSQL version (kept for backwards compatibility and for roles that need a single version)
+# The primary PostgreSQL major version (e.g. "16", "17"), kept for backwards compatibility and for roles that need
+# a single version. Within this role it is only used as the default for linux_pg_versions.
 linux_pg_version: "17"
-# All PostgreSQL versions to install side by side (e.g. ["16", "17"] during a major upgrade)
+# All PostgreSQL major versions to install side by side (e.g. ["16", "17"] during a major upgrade).
+# Used to derive the PostgreSQL package names and the version specific PGDG repositories to configure.
 linux_pg_versions:
   - "{{ linux_pg_version }}"
 
@@ -64,9 +66,9 @@ linux_architecture: "{{ linux_architectures[ansible_facts.architecture] }}"
 linux_package_state: present
 
 # Packages to install, per inventory group.
-# By default this is the `default` set of _linux_packages, merged with the set for the package manager of the host
-# (apt, dnf or zypper). Note that the merge replaces lists: if a package manager defines a list for a group,
-# that list is used instead of the default list for that group.
+# By default this is the `default` set of _linux_packages, with the set for the package manager of the host
+# (apt, dnf or zypper) appended per group, plus the PostgreSQL packages (_linux_pg_packages) for every
+# version in linux_pg_versions appended to the hacluster group.
 linux_packages: >-
   {{
     _linux_packages.default
@@ -78,8 +80,8 @@ linux_packages: >-
         recursive=True, list_merge='append')
   }}
 
-# Internal: package lists per package manager (default, apt, dnf, zypper) and per inventory group.
-# Installed once for every version in linux_pg_versions.
+# Internal: PostgreSQL packages per package manager (falls back to `default`), added to the hacluster group
+# once for every version in linux_pg_versions.
 # '{version}' is replaced by the version (e.g. 9.6) and '{short}' by the version without dots (e.g. 96)
 # Used to derive linux_packages. Override linux_packages rather than this variable.
 _linux_pg_packages:
@@ -92,6 +94,8 @@ _linux_pg_packages:
   apt:
     - "postgresql-{version}"
 
+# Internal: package lists per package manager (default, apt, dnf, zypper) and per inventory group.
+# Used to derive linux_packages. Override linux_packages rather than this variable.
 _linux_packages:
   default:
     hacluster:
@@ -131,15 +135,17 @@ _linux_packages:
 # Package repositories to configure, selected from _linux_public_repos by the package manager of the host.
 # Items are passed as-is to ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper).
 # For apt only the `repo` field is used (prefixed with `deb `) by ansible.builtin.apt_repository.
+# The version specific PGDG repositories from _linux_pg_repos are appended for every version in linux_pg_versions.
 linux_public_repos: >-
   {{
     _linux_public_repos[ansible_facts.pkg_mgr]
     + (_linux_pg_repos[ansible_facts.pkg_mgr] | default([]) | pg_versioned(linux_pg_versions))
   }}
 
-# Version specific PostgreSQL repositories, added once for every version in linux_pg_versions.
-# '{version}' is replaced by the version (e.g. 17)
+# Internal: version specific PostgreSQL repositories per package manager, added once for every version in
+# linux_pg_versions. '{version}' is replaced by the version (e.g. 17)
 # apt has no entry, because apt.postgresql.org serves all versions from one repository.
+# Override linux_public_repos rather than this variable.
 _linux_pg_repos:
   dnf:
     - name: "pgdg{version}"
@@ -161,7 +167,8 @@ _linux_pg_repos:
       priority: 20
 
 # Internal: repository definitions per package manager (dnf, zypper, apt): the PgVillage repository and the
-# PostgreSQL PGDG repositories (plus EPEL for dnf). Override linux_public_repos rather than this variable.
+# version independent PostgreSQL PGDG repositories (plus EPEL for dnf). Override linux_public_repos rather than
+# this variable.
 _linux_public_repos:
   dnf:
     - name: PgVillage
