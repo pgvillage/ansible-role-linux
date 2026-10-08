@@ -7,7 +7,7 @@ The role:
 
 - creates OS groups and users ([tasks/users.yml](../tasks/users.yml))
 - configures package repositories and installs packages for the package manager of the host
-  (`apt`, `dnf` or `zypper`)
+  (`apt`, `dnf` or `zypper`), including one or more PostgreSQL versions side by side (`linux_pg_versions`)
 - applies OS family specific tasks (if available)
 - installs sysstat
 - optionally adds all inventory hosts to `/etc/hosts` (poor man's DNS)
@@ -44,6 +44,27 @@ linux_users:
 
 A host in the `hacluster` group gets the `postgres` user, a host in the `backup` group gets the `minio` user,
 and a host in both groups gets both.
+
+## Version specific variables
+
+The custom `pg_versioned` filter ([filter_plugins/core.py](../filter_plugins/core.py)) renders a list of templates
+once for every PostgreSQL version in a list of versions, and returns all results as a single list.
+In strings `{version}` is replaced by the version (e.g. `17` or `9.6`) and `{short}` by the version without dots
+(e.g. `17` or `96`). Dicts and lists are rendered recursively, so it works for package names as well as repository
+definitions. The role uses it to derive `linux_packages` from `_linux_pg_packages` and `linux_public_repos` from
+`_linux_pg_repos`.
+
+When overriding `linux_packages` or `linux_public_repos`, the filter can be used to keep installing all versions in
+`linux_pg_versions`. Example:
+
+```yaml
+linux_pg_versions: ["16", "17"]
+linux_packages:
+  hacluster: "{{ ['postgresql{short}-server', 'postgresql{short}-contrib'] | pg_versioned(linux_pg_versions) }}"
+```
+
+Results in `postgresql16-server`, `postgresql16-contrib`, `postgresql17-server` and `postgresql17-contrib`
+for hosts in the `hacluster` group.
 
 ## Variables
 
