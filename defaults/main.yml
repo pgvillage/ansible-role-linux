@@ -173,8 +173,8 @@ _linux_public_repos:
   dnf:
     - name: PgVillage
       description: PgVillage RPM Library - RHEL $releasever - $basearch
-      baseurl: https://repo.mannemsolutions.nl/yum/pgvillage/latest/el$releasever/$basearch
-      gpgkey: https://repo.mannemsolutions.nl/yum/pgvillage/gpg_pubkey.asc
+      baseurl: https://repo.pgvillage.org/yum/pgvillage/latest/el$releasever/$basearch
+      gpgkey: https://repo.pgvillage.org/yum/pgvillage/pgvillage.asc
       gpgcheck: true
       file: pgvillage
     - name: "pgdg-common"
@@ -206,7 +206,7 @@ _linux_public_repos:
   zypper:
     - name: PgVillage
       description: PgVillage RPM Library - RHEL $releasever - $basearch
-      repo: https://repo.mannemsolutions.nl/zypp/latest/{{ ansible_facts.distribution_major_version }}/$basearch
+      repo: https://repo.pgvillage.org/zypp/latest/{{ ansible_facts.distribution_major_version }}/$basearch
       priority: 10
       disable_gpg_check: true
     - name: "pgdg-common"
@@ -224,7 +224,7 @@ _linux_public_repos:
       description: "PgVillage DEB Library - Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
       repo: >-
         [signed-by=/etc/apt/keyrings/pgvillage.asc arch={{ linux_architecture }}]
-        https://repo.mannemsolutions.nl/apt/latest
+        https://repo.pgvillage.org/apt/latest
         {{ ansible_facts.distribution_release }}
         main
       priority: 10
@@ -254,7 +254,7 @@ linux_gpg_keys:
     sles16: https://download.postgresql.org/pub/repos/zypp/keys/PGDG-RPM-GPG-KEY-SLES16
   apt:
     postgresql: https://www.postgresql.org/media/keys/ACCC4CF8.asc
-    pgvillage: https://repo.mannemsolutions.nl/apt/pgvillage.asc
+    pgvillage: https://repo.pgvillage.org/apt/pgvillage.asc
 
 # List of GPG keys (urls or paths) to import into the rpm keyring on zypper based systems.
 linux_zypper_gpg_keys:
