@@ -173,8 +173,8 @@ _linux_public_repos:
   dnf:
     - name: PgVillage
       description: PgVillage RPM Library - RHEL $releasever - $basearch
-      baseurl: https://repo.pgvillage.org/yum/pgvillage/latest/el$releasever/$basearch
-      gpgkey: https://repo.pgvillage.org/yum/pgvillage/pgvillage.asc
+      baseurl: https://repo.pgvillage.org/yum/latest/el$releasever/$basearch
+      gpgkey: https://repo.pgvillage.org/yum/pgvillage.asc
       gpgcheck: true
       file: pgvillage
     - name: "pgdg-common"
