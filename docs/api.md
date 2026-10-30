@@ -182,6 +182,14 @@ Override `linux_packages` rather than this variable.
 
 ### Repositories
 
+#### `linux_pgvillage_channel`
+
+- **Type:** string (`stable` or `latest`)
+- **Default:** `stable`
+
+Release channel of the PgVillage repositories (`repo.pgvillage.org`), used in the repository URL for dnf
+(`yum/<channel>`), zypper (`zypp/<channel>`) and apt (`apt/<channel>`).
+
 #### `linux_public_repos`
 
 - **Type:** list of dicts
