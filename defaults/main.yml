@@ -132,6 +132,10 @@ _linux_packages:
       - glibc-locale-base
       - openssl
 
+# Release channel of the PgVillage repositories (repo.pgvillage.org) for all package managers:
+# `stable` (default) or `latest`.
+linux_pgvillage_channel: stable
+
 # Package repositories to configure, selected from _linux_public_repos by the package manager of the host.
 # Items are passed as-is to ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper).
 # For apt only the `repo` field is used (prefixed with `deb `) by ansible.builtin.apt_repository.
@@ -173,7 +177,7 @@ _linux_public_repos:
   dnf:
     - name: PgVillage
       description: PgVillage RPM Library - RHEL $releasever - $basearch
-      baseurl: https://repo.pgvillage.org/yum/latest/el$releasever/$basearch
+      baseurl: https://repo.pgvillage.org/yum/{{ linux_pgvillage_channel }}/el$releasever/$basearch
       gpgkey: https://repo.pgvillage.org/yum/pgvillage.asc
       gpgcheck: true
       file: pgvillage
@@ -206,7 +210,7 @@ _linux_public_repos:
   zypper:
     - name: PgVillage
       description: PgVillage RPM Library - openSUSE $releasever - $basearch
-      repo: https://repo.pgvillage.org/zypp/latest/{{ ansible_facts.distribution_major_version }}/$basearch
+      repo: https://repo.pgvillage.org/zypp/{{ linux_pgvillage_channel }}/{{ ansible_facts.distribution_major_version }}/$basearch
       priority: 10
       disable_gpg_check: true
     - name: "pgdg-common"
@@ -224,7 +228,7 @@ _linux_public_repos:
       description: "PgVillage DEB Library - Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
       repo: >-
         [signed-by=/etc/apt/keyrings/pgvillage.asc arch={{ linux_architecture }}]
-        https://repo.pgvillage.org/apt/latest
+        https://repo.pgvillage.org/apt/{{ linux_pgvillage_channel }}
         {{ ansible_facts.distribution_release }}
         main
       priority: 10
