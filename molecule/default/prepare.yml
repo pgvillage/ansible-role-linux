@@ -1,0 +1,9 @@
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    # postgresql*-devel needs perl(IPC::Run) from CRB, which the role does not enable
+    - name: Enable the CRB repository
+      community.general.dnf_config_manager:
+        name: crb
+        state: enabled
