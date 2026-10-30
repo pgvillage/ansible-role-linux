@@ -190,6 +190,15 @@ Override `linux_packages` rather than this variable.
 Release channel of the PgVillage repositories (`repo.pgvillage.org`), used in the repository URL for dnf
 (`yum/<channel>`), zypper (`zypp/<channel>`) and apt (`apt/<channel>`).
 
+#### `linux_dnf_crb_repo`
+
+- **Type:** string
+- **Default:** `codeready-builder-for-rhel-<major>-<arch>-rpms` on RHEL, `powertools` on other EL8 distributions,
+  `crb` otherwise
+
+dnf repository to enable on dnf based systems. It provides build dependencies of the PGDG `-devel` packages, such
+as `perl(IPC::Run)` for `postgresql<version>-devel`. Set to an empty string to leave it alone.
+
 #### `linux_public_repos`
 
 - **Type:** list of dicts
