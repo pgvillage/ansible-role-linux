@@ -136,6 +136,16 @@ _linux_packages:
 # `stable` (default) or `latest`.
 linux_pgvillage_channel: stable
 
+# dnf repository with the build dependencies of the PGDG -devel packages (e.g. perl(IPC::Run)), enabled on dnf
+# based systems: CodeReady Builder on RHEL, PowerTools on EL8 rebuilds and CRB on newer rebuilds (Rocky, Alma).
+# Set to an empty string to leave it alone.
+linux_dnf_crb_repo: >-
+  {{
+    'codeready-builder-for-rhel-' ~ ansible_facts.distribution_major_version ~ '-' ~ ansible_facts.architecture ~ '-rpms'
+    if ansible_facts.distribution == 'RedHat'
+    else ('powertools' if ansible_facts.distribution_major_version == '8' else 'crb')
+  }}
+
 # Package repositories to configure, selected from _linux_public_repos by the package manager of the host.
 # Items are passed as-is to ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper).
 # For apt only the `repo` field is used (prefixed with `deb `) by ansible.builtin.apt_repository.
