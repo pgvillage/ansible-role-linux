@@ -205,17 +205,17 @@ _linux_public_repos:
       file: "epel"
   zypper:
     - name: PgVillage
-      description: PgVillage RPM Library - RHEL $releasever - $basearch
+      description: PgVillage RPM Library - openSUSE $releasever - $basearch
       repo: https://repo.pgvillage.org/zypp/latest/{{ ansible_facts.distribution_major_version }}/$basearch
       priority: 10
       disable_gpg_check: true
     - name: "pgdg-common"
-      description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
+      description: PostgreSQL common RPMs for openSUSE $releasever - $basearch
       repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
-    - name: "pgdg-rhel-extras"
-      description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
+    - name: "pgdg-opensuse-extras"
+      description: Extra packages to support some RPMs in the PostgreSQL RPM repo for openSUSE $releasever - $basearch
       repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
