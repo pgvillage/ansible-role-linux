@@ -205,7 +205,7 @@ Repository definitions per package manager. Override `linux_public_repos` rather
 | Package manager | Repositories |
 |-----------------|--------------|
 | `dnf`           | PgVillage, `pgdg-common`, `pgdg-rhel-extras`, `epel` |
-| `zypper`        | PgVillage, `pgdg-common`, `pgdg-rhel-extras` |
+| `zypper`        | PgVillage, `pgdg-common`, `pgdg-opensuse-extras` |
 | `apt`           | PgVillage, `pgdg` (serves all PostgreSQL versions) |
 
 #### `_linux_pg_repos` (internal)
