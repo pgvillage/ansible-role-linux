@@ -31,6 +31,15 @@ Including an example of how to use your role (for instance, with variables passe
       roles:
          - pgvillage.linux
 
+On EL8, first install a Python that Ansible supports (see [Bootstrap](docs/api.md#bootstrap)):
+
+    - hosts: servers
+      gather_facts: false
+      tasks:
+        - ansible.builtin.include_role:
+            name: pgvillage.linux
+            tasks_from: bootstrap
+
 License
 -------
 

@@ -87,6 +87,38 @@ All PostgreSQL major versions to install side by side (e.g. `["16", "17"]` durin
 Used to derive the PostgreSQL package names (see `_linux_pg_packages`) and the version specific PGDG repositories
 (see `_linux_pg_repos`) to configure. Must be a non-empty list; the role fails otherwise.
 
+### Bootstrap
+
+Ansible needs Python 3.9 or newer on the host (ansible-core 2.19 and newer). EL8 ships Python 3.6 as
+`/usr/bin/python3`, so the role (and fact gathering) fails there until a newer Python is installed.
+[tasks/bootstrap.yml](../tasks/bootstrap.yml) installs `linux_bootstrap_python_package` with `raw` when no Python 3.9
+or newer is found, and does nothing otherwise. Run it before the role, in a play without fact gathering:
+
+```yaml
+- hosts: servers
+  gather_facts: false
+  tasks:
+    - name: Install a Python that Ansible supports
+      ansible.builtin.include_role:
+        name: pgvillage.linux
+        tasks_from: bootstrap
+
+- hosts: servers
+  roles:
+    - pgvillage.linux
+```
+
+Ansible discovers `python3.9` up to `python3.14` before `/usr/bin/python3`, so the second play uses the installed
+Python without setting `ansible_python_interpreter`.
+
+#### `linux_bootstrap_python_package`
+
+- **Type:** string
+- **Default:** `python3.12`
+
+Python package that `tasks/bootstrap.yml` installs with dnf on hosts without Python 3.9 or newer.
+Only dnf based hosts are supported; on other hosts without a suitable Python the bootstrap fails.
+
 ### Users and groups
 
 #### `linux_users`
