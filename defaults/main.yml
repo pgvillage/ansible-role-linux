@@ -211,7 +211,9 @@ _linux_public_repos:
       exclude: "etcd*"
     - name: "epel"
       description: "Extra Packages for Enterprise Linux {{ ansible_facts.distribution_major_version }} - $basearch"
-      metalink: "https://mirrors.fedoraproject.org/metalink?repo=epel-9&arch=$basearch&infra=$infra&content=$contentdir"
+      metalink: >-
+        https://mirrors.fedoraproject.org/metalink?repo=epel-{{ ansible_facts.distribution_major_version
+        }}&arch=$basearch&infra=$infra&content=$contentdir
       enabled: true
       gpgcheck: "yes"
       gpgkey: "{{ linux_gpg_keys.dnf.epel }}"
