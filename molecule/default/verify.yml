@@ -6,12 +6,27 @@
       - stolon
       - wal-g-pg
       - etcd
-      - postgresql17-server
+      - "{{ pg_server_package[ansible_facts.pkg_mgr] }}"
       - minio
       - keepalived
       - haproxy
       - pgroute66
       - sysstat
+    # PostgreSQL server package and repositories to check, per package manager
+    pg_server_package:
+      dnf: postgresql17-server
+      zypper: postgresql17-server
+      apt: postgresql-17
+    repo_check:
+      dnf:
+        command: dnf repolist --enabled
+        expect: [PgVillage, pgdg-common, pgdg17]
+      zypper:
+        command: zypper --non-interactive repos
+        expect: [PgVillage, pgdg-common, pgdg17]
+      apt:
+        command: apt-cache policy
+        expect: [repo.pgvillage.org/apt/stable, apt.postgresql.org]
     expected_users: [postgres, pgbouncer, avchecker, pgquartz, pgfga, pgroute66, minio, haproxy, keepalived]
   tasks:
     - name: Read the installed packages
@@ -36,7 +51,7 @@
         missing: "{{ expected_users | reject('in', ansible_facts.getent_passwd) | list }}"
 
     - name: Read the repositories
-      ansible.builtin.command: dnf repolist --enabled
+      ansible.builtin.command: "{{ repo_check[ansible_facts.pkg_mgr].command }}"
       register: repolist
       changed_when: false
 
@@ -44,7 +59,7 @@
       ansible.builtin.assert:
         that: item in repolist.stdout
         fail_msg: "Repository {{ item }} is not enabled"
-      loop: [PgVillage, pgdg-common, pgdg17]
+      loop: "{{ repo_check[ansible_facts.pkg_mgr].expect }}"
 
     - name: Read the service states
       ansible.builtin.service_facts:
