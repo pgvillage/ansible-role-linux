@@ -1,0 +1,22 @@
+---
+# Installs a Python that Ansible can use (3.9 or newer) on dnf based hosts that have none, such as EL8, where
+# /usr/bin/python3 is 3.6. Uses raw only, so run it in a play with `gather_facts: false`, before the role itself.
+# Ansible discovers python3.9 ... python3.14 before /usr/bin/python3, so later plays pick up the installed version.
+- name: Install a Python that Ansible supports, when the host has none
+  ansible.builtin.raw: |
+    for python in python3.14 python3.13 python3.12 python3.11 python3.10 python3.9 python3; do
+      if command -v "$python" >/dev/null 2>&1 &&
+         "$python" -c 'import sys; sys.exit(sys.version_info < (3, 9))' 2>/dev/null; then
+        exit 0
+      fi
+    done
+    if ! command -v dnf >/dev/null 2>&1; then
+      echo "No Python 3.9 or newer found, and no dnf to install {{ linux_bootstrap_python_package }}" >&2
+      exit 1
+    fi
+    dnf install -y {{ linux_bootstrap_python_package }} >&2 && echo changed
+  args:
+    # Not every connection runs raw commands in a shell (e.g. podman)
+    executable: /bin/sh
+  register: linux_bootstrap_python
+  changed_when: "'changed' in linux_bootstrap_python.stdout"
