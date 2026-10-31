@@ -15,6 +15,9 @@ platforms:
     pre_build_image: false
     command: /usr/lib/systemd/systemd
     systemd: always
+    # sysstat.service runs sa1 as another user while keeping CAP_SYS_ADMIN, which an unprivileged container
+    # does not allow ("Failed to keep CAP_SYS_ADMIN: Operation not permitted")
+    privileged: true
     groups:
       - hacluster
       - backup
