@@ -1,0 +1,36 @@
+---
+# Tests the role on Ubuntu 26.04 in a systemd container, with the converge and verify playbooks of the default
+# scenario. The host is a member of the hacluster, backup and router groups.
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ${MOLECULE_SCENARIO_DIRECTORY}/../default/requirements.yml
+driver:
+  name: podman
+platforms:
+  - name: linux-ubuntu2604
+    image: docker.io/geerlingguy/docker-ubuntu2604-ansible:latest
+    pre_build_image: true
+    command: /usr/lib/systemd/systemd
+    systemd: always
+    groups:
+      - hacluster
+      - backup
+      - router
+provisioner:
+  name: ansible
+  playbooks:
+    converge: ../default/converge.yml
+    verify: ../default/verify.yml
+verifier:
+  name: ansible
+scenario:
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy
