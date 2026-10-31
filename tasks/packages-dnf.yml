@@ -1,6 +1,6 @@
 ---
 - name: Red Hat Satellite configuration
-  when: "linux_rh_subscription | bool"
+  when: linux_rh_subscription | length > 0
   block:
     - name: Enable the Postgresql RHSM subscriptions
       community.general.redhat_subscription:
@@ -22,7 +22,7 @@
         sslclientkey: "{{ linux_rh_misc_repo.sslclientkey }}"
         sslclientcert: "{{ linux_rh_misc_repo.sslclientcert }}"
         priority: "{{ linux_rh_misc_repo.priority }}"
-      when: "linux_rh_misc_repo"
+      when: linux_rh_misc_repo | length > 0
     - name: Autoattach
       ansible.builtin.command: "subscription-manager auto-attach"
       changed_when: false
