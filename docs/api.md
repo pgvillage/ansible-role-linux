@@ -135,9 +135,10 @@ Only dnf based hosts are supported; on other hosts without a suitable Python the
 All default users are system users.
 
 OS users to create, per inventory group.
-Every item is passed as-is to
-[`ansible.builtin.user`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html),
-so any option of that module (`uid`, `shell`, `home`, ...) can be set.
+Every item sets the options of
+[`ansible.builtin.user`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html)
+that apply to Linux: `append`, `comment`, `create_home`, `expires`, `force`, `generate_ssh_key`, `group`, `groups`, `home`, `local`, `move_home`, `name`, `non_unique`, `password`, `password_expire_account_disable`, `password_expire_max`, `password_expire_min`, `password_expire_warn`, `password_lock`, `remove`, `seuser`, `shell`, `skeleton`, `ssh_key_bits`, `ssh_key_comment`, `ssh_key_file`, `ssh_key_passphrase`, `ssh_key_type`, `state`, `system`, `uid`, `uid_max`, `uid_min`, `umask`, `update_password`.
+`name` is required. The role fails on items with other keys.
 
 #### `linux_groups`
 
@@ -153,9 +154,9 @@ so any option of that module (`uid`, `shell`, `home`, ...) can be set.
 All default groups are system groups.
 
 OS groups to create, per inventory group. Groups are created before users.
-Every item is passed as-is to
-[`ansible.builtin.group`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/group_module.html),
-so any option of that module (`gid`, `system`, ...) can be set.
+Every item sets the options of
+[`ansible.builtin.group`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/group_module.html):
+`force`, `gid`, `gid_max`, `gid_min`, `local`, `name`, `non_unique`, `state`, `system`. `name` is required. The role fails on items with other keys.
 
 ### Packages
 
@@ -238,9 +239,14 @@ as `perl(IPC::Run)` for `postgresql<version>-devel`. Set to an empty string to l
   version in `linux_pg_versions`
 
 Package repositories to configure, selected from `_linux_public_repos` by the package manager of the host.
-Items are passed as-is to
+Every item sets the options of
 [`ansible.builtin.yum_repository`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/yum_repository_module.html) (dnf) or
 [`community.general.zypper_repository`](https://docs.ansible.com/ansible/latest/collections/community/general/zypper_repository_module.html) (zypper).
+`name` is required, and the role fails on items with other keys than these:
+
+- dnf: `baseurl`, `cost`, `description`, `enabled`, `exclude`, `file`, `gpgcakey`, `gpgcheck`, `gpgkey`, `includepkgs`, `metadata_expire`, `metalink`, `mirrorlist`, `module_hotfixes`, `name`, `password`, `priority`, `proxy`, `proxy_password`, `proxy_username`, `repo_gpgcheck`, `skip_if_unavailable`, `sslcacert`, `sslclientcert`, `sslclientkey`, `sslverify`, `state`, `timeout`, `username`
+- zypper: `auto_import_keys`, `autorefresh`, `description`, `disable_gpg_check`, `enabled`, `name`, `overwrite_multiple`, `priority`, `repo`, `runrefresh`, `state`
+
 For apt only the `repo` field is used (prefixed with `deb `) by
 [`ansible.builtin.apt_repository`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_repository_module.html).
 The version specific PGDG repositories from `_linux_pg_repos` are appended for every version in `linux_pg_versions`.

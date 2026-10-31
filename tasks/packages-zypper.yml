@@ -1,7 +1,31 @@
 ---
-- name: Add repository # noqa: args[module]
-  community.general.zypper_repository: "{{ item }}"
+- name: Check the repository options
+  ansible.builtin.assert:
+    that: unsupported | length == 0
+    fail_msg: "Unsupported zypper_repository options for {{ item.name }}: {{ unsupported }}"
+    quiet: true
   loop: "{{ linux_public_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+  vars:
+    unsupported: "{{ item.keys() | difference(_linux_module_options.zypper_repository) }}"
+
+- name: Add repository
+  community.general.zypper_repository:
+    auto_import_keys: "{{ item.auto_import_keys | default(omit) }}"
+    autorefresh: "{{ item.autorefresh | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    disable_gpg_check: "{{ item.disable_gpg_check | default(omit) }}"
+    enabled: "{{ item.enabled | default(omit) }}"
+    name: "{{ item.name }}"
+    overwrite_multiple: "{{ item.overwrite_multiple | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}"
+    repo: "{{ item.repo | default(omit) }}"
+    runrefresh: "{{ item.runrefresh | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+  loop: "{{ linux_public_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Import PostgreSQL GPG key
   ansible.builtin.rpm_key:

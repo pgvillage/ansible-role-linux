@@ -1,10 +1,78 @@
 ---
+- name: Check the group options
+  ansible.builtin.assert:
+    that: unsupported | length == 0
+    fail_msg: "Unsupported group options for {{ item.name }}: {{ unsupported }}"
+    quiet: true
+  loop: "{{ linux_groups | bygroup(group_names) }}"
+  loop_control:
+    label: "{{ item.name }}"
+  vars:
+    unsupported: "{{ item.keys() | difference(_linux_module_options.group) }}"
+
 - name: Create groups
   ansible.builtin.group:
-  args: "{{ item }}"
+    force: "{{ item.force | default(omit) }}"
+    gid: "{{ item.gid | default(omit) }}"
+    gid_max: "{{ item.gid_max | default(omit) }}"
+    gid_min: "{{ item.gid_min | default(omit) }}"
+    local: "{{ item.local | default(omit) }}"
+    name: "{{ item.name }}"
+    non_unique: "{{ item.non_unique | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+    system: "{{ item.system | default(omit) }}"
   loop: "{{ linux_groups | bygroup(group_names) }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Check the user options
+  ansible.builtin.assert:
+    that: unsupported | length == 0
+    fail_msg: "Unsupported user options for {{ item.name }}: {{ unsupported }}"
+    quiet: true
+  loop: "{{ linux_users | bygroup(group_names) }}"
+  loop_control:
+    label: "{{ item.name }}"
+  vars:
+    unsupported: "{{ item.keys() | difference(_linux_module_options.user) }}"
 
 - name: Create users
   ansible.builtin.user:
-  args: "{{ item }}"
+    append: "{{ item.append | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
+    create_home: "{{ item.create_home | default(omit) }}"
+    expires: "{{ item.expires | default(omit) }}"
+    force: "{{ item.force | default(omit) }}"
+    generate_ssh_key: "{{ item.generate_ssh_key | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    groups: "{{ item.groups | default(omit) }}"
+    home: "{{ item.home | default(omit) }}"
+    local: "{{ item.local | default(omit) }}"
+    move_home: "{{ item.move_home | default(omit) }}"
+    name: "{{ item.name }}"
+    non_unique: "{{ item.non_unique | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    password_expire_account_disable: "{{ item.password_expire_account_disable | default(omit) }}"
+    password_expire_max: "{{ item.password_expire_max | default(omit) }}"
+    password_expire_min: "{{ item.password_expire_min | default(omit) }}"
+    password_expire_warn: "{{ item.password_expire_warn | default(omit) }}"
+    password_lock: "{{ item.password_lock | default(omit) }}"
+    remove: "{{ item.remove | default(omit) }}"
+    seuser: "{{ item.seuser | default(omit) }}"
+    shell: "{{ item.shell | default(omit) }}"
+    skeleton: "{{ item.skeleton | default(omit) }}"
+    ssh_key_bits: "{{ item.ssh_key_bits | default(omit) }}"
+    ssh_key_comment: "{{ item.ssh_key_comment | default(omit) }}"
+    ssh_key_file: "{{ item.ssh_key_file | default(omit) }}"
+    ssh_key_passphrase: "{{ item.ssh_key_passphrase | default(omit) }}"
+    ssh_key_type: "{{ item.ssh_key_type | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+    system: "{{ item.system | default(omit) }}"
+    uid: "{{ item.uid | default(omit) }}"
+    uid_max: "{{ item.uid_max | default(omit) }}"
+    uid_min: "{{ item.uid_min | default(omit) }}"
+    umask: "{{ item.umask | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
   loop: "{{ linux_users | bygroup(group_names) }}"
+  loop_control:
+    label: "{{ item.name }}"
