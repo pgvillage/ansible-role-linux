@@ -1,0 +1,41 @@
+---
+# Tests the role on openSUSE Leap 16.0 (x86_64) in a systemd container built from the Dockerfile in this
+# directory, with the converge and verify playbooks of the default scenario. The host is a member of the
+# hacluster, backup and router groups.
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ${MOLECULE_SCENARIO_DIRECTORY}/../default/requirements.yml
+driver:
+  name: podman
+platforms:
+  - name: linux-leap16
+    image: opensuse-leap16-systemd
+    dockerfile: Dockerfile
+    pre_build_image: false
+    command: /usr/lib/systemd/systemd
+    systemd: always
+    # sysstat.service runs sa1 as another user while keeping CAP_SYS_ADMIN, which an unprivileged container
+    # does not allow ("Failed to keep CAP_SYS_ADMIN: Operation not permitted")
+    privileged: true
+    groups:
+      - hacluster
+      - backup
+      - router
+provisioner:
+  name: ansible
+  playbooks:
+    converge: ../default/converge.yml
+    verify: ../default/verify.yml
+verifier:
+  name: ansible
+scenario:
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy

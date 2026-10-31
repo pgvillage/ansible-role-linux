@@ -217,21 +217,26 @@ _linux_public_repos:
       gpgkey: "{{ linux_gpg_keys.dnf.epel }}"
       # repo_gpgcheck: yes
       file: "epel"
+  # zypper repositories use facts instead of $releasever / $basearch: zypper reports those expanded, so
+  # zypper_repository would see a changed description or url on every run
   zypper:
     - name: PgVillage
-      description: PgVillage RPM Library - openSUSE $releasever - $basearch
+      description: PgVillage RPM Library - openSUSE {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}
       repo: >-
         https://repo.pgvillage.org/zypp/{{ linux_pgvillage_channel }}/lp{{
-        ansible_facts.distribution_version | replace('.', '') }}/$basearch
+        ansible_facts.distribution_version | replace('.', '') }}/{{
+        ansible_facts.architecture }}
       priority: 10
       disable_gpg_check: true
     - name: "pgdg-common"
-      description: PostgreSQL common RPMs for openSUSE $releasever - $basearch
+      description: PostgreSQL common RPMs for openSUSE {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}
       repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
     - name: "pgdg-opensuse-extras"
-      description: Extra packages to support some RPMs in the PostgreSQL RPM repo for openSUSE $releasever - $basearch
+      description: >-
+        Extra packages to support some RPMs in the PostgreSQL RPM repo for openSUSE
+        {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}
       repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
       enabled: true
       priority: 20
