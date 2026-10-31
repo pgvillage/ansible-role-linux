@@ -1,6 +1,7 @@
 ---
-# Tests the role on Rocky Linux 9 in a systemd container. The host is a member of the hacluster, backup and
-# router groups, so the packages and users of all of these groups are installed.
+# Tests the role on Rocky Linux 8 and 9 in systemd containers. The hosts are members of the hacluster, backup and
+# router groups, so the packages and users of all of these groups are installed. prepare.yml runs the role's
+# bootstrap, which installs a newer Python on Rocky 8 (its /usr/bin/python3 is 3.6).
 dependency:
   name: galaxy
   options:
@@ -8,6 +9,15 @@ dependency:
 driver:
   name: podman
 platforms:
+  - name: linux-el8
+    image: docker.io/geerlingguy/docker-rockylinux8-ansible:latest
+    pre_build_image: true
+    command: /usr/sbin/init
+    systemd: always
+    groups:
+      - hacluster
+      - backup
+      - router
   - name: linux-el9
     image: docker.io/geerlingguy/docker-rockylinux9-ansible:latest
     pre_build_image: true
@@ -27,6 +37,7 @@ scenario:
     - destroy
     - syntax
     - create
+    - prepare
     - converge
     - idempotence
     - verify

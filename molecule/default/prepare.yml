@@ -1,0 +1,9 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install a Python that Ansible supports
+      ansible.builtin.include_role:
+        name: pgvillage.linux
+        tasks_from: bootstrap
