@@ -17,7 +17,10 @@ The role:
 Several variables (`linux_users`, `linux_groups` and `linux_packages`) are hashes keyed by inventory group name.
 The custom `bygroup` filter ([filter_plugins/core.py](../filter_plugins/core.py)) flattens such a hash into a
 single list, containing only the items of the groups that the current host is a member of (`group_names`).
-Package names in `linux_packages` are deduplicated. User and group definitions in `linux_users` and
+Items keep their order (by inventory group as listed in the hash, then by position in each list), so packages are
+installed, and users and groups created, in the same order on every run.
+Package names in `linux_packages` are deduplicated, keeping the first occurrence. User and group definitions in
+`linux_users` and
 `linux_groups` are dictionaries, so they are returned without deduplication; definitions repeated across
 matching inventory groups remain in the list.
 

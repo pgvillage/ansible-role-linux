@@ -5,9 +5,10 @@ def filter_by_group(grouped_lists, groups):
     """Flatten a hash of lists keyed by inventory group into a single list.
 
     Only the lists of the groups in ``groups`` (typically ``group_names``) are included.
-    Hashable items (e.g. package names) are deduplicated; the order of the result is not guaranteed.
+    Items are returned in order: by group as ordered in ``grouped_lists``, then by position in each list.
+    Hashable items (e.g. package names) are deduplicated, keeping the first occurrence.
     If any item is unhashable (e.g. user or group definitions, which are dicts), all items are returned
-    in order and without deduplication.
+    without deduplication.
 
     Exposed as the ``bygroup`` filter, e.g. ``linux_packages | bygroup(group_names)``.
 
@@ -15,11 +16,12 @@ def filter_by_group(grouped_lists, groups):
     :param groups: list of inventory group names the host is a member of
     :return: list of items of the matching groups
     """
-    # Use a set to make uniue, and then convert to list again to make it json_serializable
+    items = [ value for key, values in grouped_lists.items() if key in groups for value in values ]
+    # dict.fromkeys deduplicates while keeping the order (a set would make the order differ per run)
     try:
-        return list({ value for key, values in grouped_lists.items() if key in groups for value in values })
+        return list(dict.fromkeys(items))
     except TypeError:
-        return [ value for key, values in grouped_lists.items() if key in groups for value in values ]
+        return items
 
 
 def pg_versioned(templates, versions):
