@@ -20,9 +20,8 @@ single list, containing only the items of the groups that the current host is a 
 Items keep their order (by inventory group as listed in the hash, then by position in each list), so packages are
 installed, and users and groups created, in the same order on every run.
 Package names in `linux_packages` are deduplicated, keeping the first occurrence. User and group definitions in
-`linux_users` and
-`linux_groups` are dictionaries, so they are returned without deduplication; definitions repeated across
-matching inventory groups remain in the list.
+`linux_users` and `linux_groups` are dictionaries, so they are returned without deduplication; definitions repeated
+across matching inventory groups remain in the list.
 
 The default PgVillage groups are:
 
