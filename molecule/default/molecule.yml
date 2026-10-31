@@ -1,0 +1,33 @@
+---
+# Tests the role on Rocky Linux 9 in a systemd container. The host is a member of the hacluster, backup and
+# router groups, so the packages and users of all of these groups are installed.
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ${MOLECULE_SCENARIO_DIRECTORY}/requirements.yml
+driver:
+  name: podman
+platforms:
+  - name: linux-el9
+    image: docker.io/geerlingguy/docker-rockylinux9-ansible:latest
+    pre_build_image: true
+    command: /usr/sbin/init
+    systemd: always
+    groups:
+      - hacluster
+      - backup
+      - router
+provisioner:
+  name: ansible
+verifier:
+  name: ansible
+scenario:
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy

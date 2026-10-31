@@ -1,0 +1,56 @@
+---
+- name: Verify
+  hosts: all
+  vars:
+    expected_packages:
+      - stolon
+      - wal-g-pg
+      - etcd
+      - postgresql17-server
+      - minio
+      - keepalived
+      - haproxy
+      - pgroute66
+      - sysstat
+    expected_users: [postgres, pgbouncer, avchecker, pgquartz, pgfga, pgroute66, minio, haproxy, keepalived]
+  tasks:
+    - name: Read the installed packages
+      ansible.builtin.package_facts:
+
+    - name: Check that the packages of all groups are installed
+      ansible.builtin.assert:
+        that: missing | length == 0
+        fail_msg: "Packages not installed: {{ missing }}"
+      vars:
+        missing: "{{ expected_packages | reject('in', ansible_facts.packages) | list }}"
+
+    - name: Read the users
+      ansible.builtin.getent:
+        database: passwd
+
+    - name: Check that the users of all groups exist
+      ansible.builtin.assert:
+        that: missing | length == 0
+        fail_msg: "Users not created: {{ missing }}"
+      vars:
+        missing: "{{ expected_users | reject('in', ansible_facts.getent_passwd) | list }}"
+
+    - name: Read the repositories
+      ansible.builtin.command: dnf repolist --enabled
+      register: repolist
+      changed_when: false
+
+    - name: Check that the PgVillage and PGDG repositories are enabled
+      ansible.builtin.assert:
+        that: item in repolist.stdout
+        fail_msg: "Repository {{ item }} is not enabled"
+      loop: [PgVillage, pgdg-common, pgdg17]
+
+    - name: Read the service states
+      ansible.builtin.service_facts:
+
+    - name: Check that sysstat runs and is enabled
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['sysstat.service'].state in ['running', 'stopped']
+          - ansible_facts.services['sysstat.service'].status == 'enabled'

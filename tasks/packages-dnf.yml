@@ -34,6 +34,12 @@
   ansible.builtin.yum_repository: "{{ item }}"
   loop: "{{ linux_public_repos }}"
 
+- name: Enable the CRB repository
+  community.general.dnf_config_manager:
+    name: "{{ linux_dnf_crb_repo }}"
+    state: enabled
+  when: linux_dnf_crb_repo | length > 0
+
 # This should be dnf package, but it hangs
 - name: Upgrade all packages
   ansible.builtin.package:
