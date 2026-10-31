@@ -13,6 +13,10 @@ linux_pg_version: "17"
 linux_pg_versions:
   - "{{ linux_pg_version }}"
 
+# Python package that tasks/bootstrap.yml installs on dnf based hosts without a Python that Ansible supports
+# (3.9 or newer), such as EL8.
+linux_bootstrap_python_package: python3.12
+
 # OS users to create, per inventory group.
 # Every item sets the Linux options of ansible.builtin.user (uid, shell, home, ...; see _linux_module_options.user in
 # vars/main.yml). Items with other keys make the role fail.
