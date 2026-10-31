@@ -30,9 +30,51 @@
       ansible.builtin.command: "subscription-manager attach"
       changed_when: false
 
-- name: Add repository # noqa: args[module]
-  ansible.builtin.yum_repository: "{{ item }}"
+- name: Check the repository options
+  ansible.builtin.assert:
+    that: unsupported | length == 0
+    fail_msg: "Unsupported yum_repository options for {{ item.name }}: {{ unsupported }}"
+    quiet: true
   loop: "{{ linux_public_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+  vars:
+    unsupported: "{{ item.keys() | difference(_linux_module_options.yum_repository) }}"
+
+- name: Add repository
+  ansible.builtin.yum_repository:
+    baseurl: "{{ item.baseurl | default(omit) }}"
+    cost: "{{ item.cost | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    enabled: "{{ item.enabled | default(omit) }}"
+    exclude: "{{ item.exclude | default(omit) }}"
+    file: "{{ item.file | default(omit) }}"
+    gpgcakey: "{{ item.gpgcakey | default(omit) }}"
+    gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+    gpgkey: "{{ item.gpgkey | default(omit) }}"
+    includepkgs: "{{ item.includepkgs | default(omit) }}"
+    metadata_expire: "{{ item.metadata_expire | default(omit) }}"
+    metalink: "{{ item.metalink | default(omit) }}"
+    mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+    module_hotfixes: "{{ item.module_hotfixes | default(omit) }}"
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}"
+    proxy: "{{ item.proxy | default(omit) }}"
+    proxy_password: "{{ item.proxy_password | default(omit) }}"
+    proxy_username: "{{ item.proxy_username | default(omit) }}"
+    repo_gpgcheck: "{{ item.repo_gpgcheck | default(omit) }}"
+    skip_if_unavailable: "{{ item.skip_if_unavailable | default(omit) }}"
+    sslcacert: "{{ item.sslcacert | default(omit) }}"
+    sslclientcert: "{{ item.sslclientcert | default(omit) }}"
+    sslclientkey: "{{ item.sslclientkey | default(omit) }}"
+    sslverify: "{{ item.sslverify | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    username: "{{ item.username | default(omit) }}"
+  loop: "{{ linux_public_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Enable the CRB repository
   community.general.dnf_config_manager:

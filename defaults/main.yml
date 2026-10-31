@@ -14,7 +14,8 @@ linux_pg_versions:
   - "{{ linux_pg_version }}"
 
 # OS users to create, per inventory group.
-# Every item is passed as-is to ansible.builtin.user, so any option of that module (uid, shell, home, ...) can be set.
+# Every item sets the Linux options of ansible.builtin.user (uid, shell, home, ...; see _linux_module_options.user in
+# vars/main.yml). Items with other keys make the role fail.
 linux_users:
   hacluster:
     - name: postgres
@@ -44,7 +45,8 @@ linux_users:
       system: true
 
 # OS groups to create, per inventory group. Groups are created before users.
-# Every item is passed as-is to ansible.builtin.group, so any option of that module (gid, system, ...) can be set.
+# Every item sets the options of ansible.builtin.group (gid, system, ...; see _linux_module_options.group in
+# vars/main.yml). Items with other keys make the role fail.
 linux_groups:
   hacluster:
     - name: postgres
@@ -147,7 +149,8 @@ linux_dnf_crb_repo: >-
   }}
 
 # Package repositories to configure, selected from _linux_public_repos by the package manager of the host.
-# Items are passed as-is to ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper).
+# Items set the options of ansible.builtin.yum_repository (dnf) or community.general.zypper_repository (zypper) listed
+# in _linux_module_options in vars/main.yml. Items with other keys make the role fail.
 # For apt only the `repo` field is used (prefixed with `deb `) by ansible.builtin.apt_repository.
 # The version specific PGDG repositories from _linux_pg_repos are appended for every version in linux_pg_versions.
 linux_public_repos: >-
