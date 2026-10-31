@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [default, apt]
+        scenario: [default, apt, zypper]
     permissions:
       contents: read
     steps:
