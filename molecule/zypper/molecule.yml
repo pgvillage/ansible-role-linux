@@ -1,7 +1,7 @@
 ---
-# Tests the role on openSUSE Leap 16.0 (x86_64) in a systemd container built from the Dockerfile in this
-# directory, with the converge and verify playbooks of the default scenario. The host is a member of the
-# hacluster, backup and router groups.
+# Tests the role on openSUSE Leap 16.0 (lp160, x86_64) with PgVillage v0.3.8, in a systemd container built from
+# the Dockerfile in this directory, with the converge and verify playbooks of the default scenario. The host is a
+# member of the hacluster, backup and router groups.
 dependency:
   name: galaxy
   options:
@@ -24,6 +24,11 @@ platforms:
       - router
 provisioner:
   name: ansible
+  inventory:
+    group_vars:
+      all:
+        # Pinned to v0.3.8 until stable and latest point to it
+        linux_pgvillage_channel: v0.3.8
   playbooks:
     converge: ../default/converge.yml
     verify: ../default/verify.yml
