@@ -101,10 +101,20 @@
   ansible.builtin.command: dnf module disable -y postgresql
   when: "'postgresql' in dnf_module_list.stdout"
   changed_when: false
+
+# Refresh the metadata of all repositories once. With update_cache on every
+# item of the loop below, dnf reloaded all metadata (EPEL, PGDG, PgVillage)
+# for every package: about a minute per package on EL9.
+- name: Refresh the package metadata
+  ansible.builtin.dnf:
+    update_cache: true
+  changed_when: false
+
+# One package per call: installing them all in one dnf transaction gave
+# problems before.
 - name: Install packages
   ansible.builtin.package:
     name: "{{ item }}"
     state: "{{ linux_package_state }}"
-    update_cache: "true"
     disable_gpg_check: "{{ linux_disable_gpg_check }}"
   loop: "{{ linux_packages | bygroup(group_names) }}"
