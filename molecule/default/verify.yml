@@ -7,7 +7,8 @@
       - wal-g-pg
       - etcd
       - "{{ pg_server_package[ansible_facts.pkg_mgr] }}"
-      - minio
+      - rustfs
+      - rustfs-cli
       - keepalived
       - haproxy
       - pgroute66
@@ -26,8 +27,8 @@
         expect: [PgVillage, pgdg-common, pgdg17]
       apt:
         command: apt-cache policy
-        expect: [repo.pgvillage.org/apt/stable, apt.postgresql.org]
-    expected_users: [postgres, pgbouncer, avchecker, pgquartz, pgfga, pgroute66, minio, haproxy, keepalived]
+        expect: ["repo.pgvillage.org/apt/{{ linux_pgvillage_channel }}", apt.postgresql.org]
+    expected_users: [postgres, pgbouncer, avchecker, pgquartz, pgfga, pgroute66, rustfs, haproxy, keepalived]
   tasks:
     - name: Read the installed packages
       ansible.builtin.package_facts:

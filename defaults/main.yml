@@ -38,7 +38,7 @@ linux_users:
     - name: pgroute66
       system: true
   backup:
-    - name: minio
+    - name: rustfs
       system: true
   router:
     - name: haproxy
@@ -57,7 +57,7 @@ linux_groups:
       system: true
 #      gid: 26
   backup:
-    - name: minio
+    - name: rustfs
       system: true
   router:
     - name: pgroute66
@@ -110,7 +110,8 @@ _linux_packages:
       - "etcd"
 
     backup:
-      - "minio"
+      - "rustfs"
+      - "rustfs-cli"
 
     router:
       - keepalived
