@@ -1,7 +1,7 @@
 ---
-# Tests the role on Rocky Linux 8 and 9 in systemd containers. The hosts are members of the hacluster, backup and
-# router groups, so the packages and users of all of these groups are installed. prepare.yml runs the role's
-# bootstrap, which installs a newer Python on Rocky 8 (its /usr/bin/python3 is 3.6).
+# Tests the role on Rocky Linux 8, 9 and 10 in systemd containers, with PgVillage v0.3.8. The hosts are members
+# of the hacluster, backup and router groups, so the packages and users of all of these groups are installed.
+# prepare.yml runs the role's bootstrap, which installs a newer Python on Rocky 8 (its /usr/bin/python3 is 3.6).
 dependency:
   name: galaxy
   options:
@@ -27,8 +27,22 @@ platforms:
       - hacluster
       - backup
       - router
+  - name: linux-el10
+    image: docker.io/geerlingguy/docker-rockylinux10-ansible:latest
+    pre_build_image: true
+    command: /usr/sbin/init
+    systemd: always
+    groups:
+      - hacluster
+      - backup
+      - router
 provisioner:
   name: ansible
+  inventory:
+    group_vars:
+      all:
+        # Pinned to v0.3.8 until stable and latest point to it (stable has no el10 packages yet)
+        linux_pgvillage_channel: v0.3.8
 verifier:
   name: ansible
 scenario:

@@ -28,7 +28,7 @@ The default PgVillage groups are:
 | Group        | Purpose                                                        |
 |--------------|----------------------------------------------------------------|
 | `hacluster`  | PostgreSQL database servers (Stolon, etcd, WAL-G, pgbouncer, ...) |
-| `backup`     | Backup servers (MinIO)                                         |
+| `backup`     | Backup servers (RustFS)                                        |
 | `router`     | Routers (HAProxy, keepalived, pgroute66)                       |
 | `localhosts` | The Ansible controller (chainsmith)                            |
 
@@ -40,11 +40,11 @@ linux_users:
     - name: postgres
       system: true
   backup:
-    - name: minio
+    - name: rustfs
       system: true
 ```
 
-A host in the `hacluster` group gets the `postgres` user, a host in the `backup` group gets the `minio` user,
+A host in the `hacluster` group gets the `postgres` user, a host in the `backup` group gets the `rustfs` user,
 and a host in both groups gets both.
 
 ## Version specific variables
@@ -131,7 +131,7 @@ Only dnf based hosts are supported; on other hosts without a suitable Python the
 | Group       | Users                                                                       |
 |-------------|-----------------------------------------------------------------------------|
 | `hacluster` | `postgres` (bash), `pgbouncer` (bash), `avchecker`, `pgquartz`, `pgfga`, `pgroute66` |
-| `backup`    | `minio`                                                                     |
+| `backup`    | `rustfs`                                                                    |
 | `router`    | `haproxy`, `keepalived`, `pgroute66`                                        |
 
 All default users are system users.
@@ -150,7 +150,7 @@ that apply to Linux: `append`, `comment`, `create_home`, `expires`, `force`, `ge
 | Group       | Groups      |
 |-------------|-------------|
 | `hacluster` | `postgres`  |
-| `backup`    | `minio`     |
+| `backup`    | `rustfs`    |
 | `router`    | `pgroute66` |
 
 All default groups are system groups.
@@ -190,7 +190,7 @@ Override `linux_packages` rather than this variable.
 | Package manager | Group        | Packages |
 |-----------------|--------------|----------|
 | `default`       | `hacluster`  | `stolon`, `wal-g-pg`, `etcd` |
-| `default`       | `backup`     | `minio` |
+| `default`       | `backup`     | `rustfs`, `rustfs-cli` |
 | `default`       | `router`     | `keepalived`, `haproxy`, `pgroute66` |
 | `default`       | `localhosts` | `chainsmith` |
 | `apt`           | `hacluster`  | `acl` |

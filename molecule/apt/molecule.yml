@@ -1,6 +1,6 @@
 ---
-# Tests the role on Ubuntu 26.04 in a systemd container, with the converge and verify playbooks of the default
-# scenario. The host is a member of the hacluster, backup and router groups.
+# Tests the role on Ubuntu 26.04 with PgVillage v0.0.4 (apt has no v0.3.8), in a systemd container, with the
+# converge and verify playbooks of the default scenario. The host is a member of the hacluster, backup and router groups.
 dependency:
   name: galaxy
   options:
@@ -19,6 +19,11 @@ platforms:
       - router
 provisioner:
   name: ansible
+  inventory:
+    group_vars:
+      all:
+        # Pinned to v0.0.4 until stable and latest point to v0.3.8 (apt has no v0.3.8; stable has minio, no rustfs)
+        linux_pgvillage_channel: v0.0.4
   playbooks:
     converge: ../default/converge.yml
     verify: ../default/verify.yml
