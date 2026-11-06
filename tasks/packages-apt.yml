@@ -23,6 +23,32 @@
       "/etc/postgresql-common/createcluster.conf": |
         create_main_cluster = false
 
+# needrestart (Ubuntu) restarts the services of replaced binaries and libraries after every apt run, on all hosts at
+# once. Set up before the packages are installed or upgraded, so it leaves the PgVillage services to their roles.
+- name: Needrestart config folder
+  ansible.builtin.file:
+    state: directory
+    dest: /etc/needrestart/conf.d
+    owner: root
+    group: root
+    mode: "0755"
+  when: linux_needrestart_exclude | length > 0
+
+- name: Keep needrestart from restarting the PgVillage services
+  ansible.builtin.template:
+    src: needrestart.conf.j2
+    dest: /etc/needrestart/conf.d/pgvillage.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: linux_needrestart_exclude | length > 0
+
+- name: Remove the needrestart config when nothing is excluded
+  ansible.builtin.file:
+    state: absent
+    dest: /etc/needrestart/conf.d/pgvillage.conf
+  when: linux_needrestart_exclude | length == 0
+
 - name: Download PostgreSQL GPG key
   ansible.builtin.get_url:
     url: "{{ item.value }}"

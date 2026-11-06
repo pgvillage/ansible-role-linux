@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# needrestart must not restart these services after a package upgrade: their PgVillage roles restart them, one host at
+# a time (linux_needrestart_exclude)
+{% for unit in linux_needrestart_exclude %}
+$nrconf{override_rc}{qr{{ '{' }}{{ unit }}{{ '}' }}} = 0;
+{% endfor %}

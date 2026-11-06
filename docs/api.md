@@ -162,6 +162,17 @@ Every item sets the options of
 
 ### Packages
 
+#### `linux_needrestart_exclude`
+
+- **Type:** list of strings (regular expressions)
+- **Default:** `^stolon-(keeper|sentinel|proxy)(@.+)?\.service$`, `^etcd\.service$`,
+  `^(pgroute66|haproxy|keepalived)\.service$`, `^pgbouncer(@.+)?\.service$`
+
+apt hosts only: systemd units that needrestart must not restart after a package upgrade. needrestart (Ubuntu) restarts
+the services of replaced binaries and libraries after every apt run, on all hosts at once; the PgVillage roles restart
+their services one host at a time instead. The role writes them to `/etc/needrestart/conf.d/pgvillage.conf`
+(`$nrconf{override_rc}`) before it installs or upgrades packages. An empty list removes that file.
+
 #### `linux_package_state`
 
 - **Type:** string (`present` or `latest`)
