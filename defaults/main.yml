@@ -67,6 +67,15 @@ linux_groups:
 # using the linux_architectures mapping in vars/main.yml. Used in the apt repository definitions.
 linux_architecture: "{{ linux_architectures[ansible_facts.architecture] }}"
 
+# apt hosts: systemd units (regular expressions) that needrestart must not restart after a package upgrade. needrestart
+# restarts them on every host at once; their PgVillage roles restart them one host at a time instead. Written to
+# /etc/needrestart/conf.d/pgvillage.conf; an empty list removes that file.
+linux_needrestart_exclude:
+  - '^stolon-(keeper|sentinel|proxy)(@.+)?\.service$'
+  - '^etcd\.service$'
+  - '^(pgroute66|haproxy|keepalived)\.service$'
+  - '^pgbouncer(@.+)?\.service$'
+
 # State of the packages to install: `present` (default) or `latest`.
 # When set to `latest`, all packages on the system are upgraded as well.
 linux_package_state: present

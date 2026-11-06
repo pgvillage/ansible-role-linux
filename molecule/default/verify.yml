@@ -70,3 +70,14 @@
         that:
           - ansible_facts.services['sysstat.service'].state in ['running', 'stopped']
           - ansible_facts.services['sysstat.service'].status == 'enabled'
+
+    # needrestart reads it with Perl's `do`: it must parse, and exclude the stolon keepers but not e.g. sshd
+    - name: Check that needrestart leaves the PgVillage services alone (apt)
+      ansible.builtin.shell:
+        cmd: >-
+          perl -e 'our %nrconf; do "/etc/needrestart/conf.d/pgvillage.conf"; die $@ if $@;
+          my @re = keys %{$nrconf{override_rc}};
+          exit 1 unless grep { "stolon-keeper@cluster1.service" =~ $_ } @re;
+          exit 1 if grep { "ssh.service" =~ $_ } @re'
+      changed_when: false
+      when: ansible_facts.pkg_mgr == 'apt'
