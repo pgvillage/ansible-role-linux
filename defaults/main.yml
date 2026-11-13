@@ -80,6 +80,10 @@ linux_needrestart_exclude:
 # When set to `latest`, all packages on the system are upgraded as well.
 linux_package_state: present
 
+# apt hosts: seconds the package lists stay valid. The role refreshes them once per run (before installing or
+# upgrading), and skips that when they are younger than this. 0 refreshes them on every run.
+linux_apt_cache_valid_time: 600
+
 # Packages to install, per inventory group.
 # By default this is the `default` set of _linux_packages, with the set for the package manager of the host
 # (apt, dnf or zypper) appended per group, plus the PostgreSQL packages (_linux_pg_packages) for every
