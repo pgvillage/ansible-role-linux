@@ -210,7 +210,7 @@ Override `linux_packages` rather than this variable.
 | `zypper`        | `hacluster`  | `glibc-locale`, `glibc-locale-base`, `openssl` |
 
 On Debian based systems, the role prevents the packaging system from automatically starting services and creating
-a default PostgreSQL cluster, and stops / disables `postgresql.service` when PostgreSQL packages are installed.
+a default PostgreSQL cluster. `postgresql.service` stays enabled but starts nothing, since there are no clusters.
 
 #### `_linux_pg_packages` (internal)
 
