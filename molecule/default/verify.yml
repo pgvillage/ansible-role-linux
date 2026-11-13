@@ -81,3 +81,10 @@
           exit 1 if grep { "ssh.service" =~ $_ } @re'
       changed_when: false
       when: ansible_facts.pkg_mgr == 'apt'
+
+    # policy-rc.d keeps apt from starting services, and createcluster.conf from creating the main cluster
+    - name: Check that installing PostgreSQL started no PostgreSQL and created no cluster (apt)
+      ansible.builtin.shell:
+        cmd: "! pgrep -x postgres && test -z \"$(ls -A /etc/postgresql 2>/dev/null)\""
+      changed_when: false
+      when: ansible_facts.pkg_mgr == 'apt'
