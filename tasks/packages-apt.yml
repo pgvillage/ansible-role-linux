@@ -62,6 +62,15 @@
     state: present
   loop: "{{ linux_public_repos }}"
 
+# Refresh the package lists once. With update_cache on every item of the
+# install loop, apt-get update ran for every package (11 times per host): slow,
+# and every run is a chance to fail on a flaky network.
+- name: Refresh the package lists
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ linux_apt_cache_valid_time }}"
+  changed_when: false
+
 - name: Upgrade all packages
   ansible.builtin.package:
     name: "*"
@@ -70,9 +79,8 @@
   async: 600
   poll: 5
 
+# All packages in one apt call
 - name: Install packages
-  ansible.builtin.package:
-    name: "{{ item }}"
+  ansible.builtin.apt:
+    name: "{{ linux_packages | bygroup(group_names) }}"
     state: "{{ linux_package_state }}"
-    update_cache: "true"
-  loop: "{{ linux_packages | bygroup(group_names) }}"
