@@ -173,6 +173,14 @@ the services of replaced binaries and libraries after every apt run, on all host
 their services one host at a time instead. The role writes them to `/etc/needrestart/conf.d/pgvillage.conf`
 (`$nrconf{override_rc}`) before it installs or upgrades packages. An empty list removes that file.
 
+#### `linux_apt_cache_valid_time`
+
+- **Type:** integer (seconds)
+- **Default:** `600`
+
+apt hosts only: the role refreshes the package lists once per run, before it upgrades or installs packages, and skips
+that when they are younger than this. `0` refreshes them on every run. The packages are installed in one apt call.
+
 #### `linux_package_state`
 
 - **Type:** string (`present` or `latest`)
