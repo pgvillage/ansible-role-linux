@@ -1,7 +1,8 @@
 # pgvillage.linux role API
 
 This document describes all variables that can be used to configure the `pgvillage.linux` role.
-All defaults are defined in [defaults/main.yml](../defaults/main.yml).
+All defaults are defined in [defaults/main.yml](../defaults/main.yml); the internal variables (prefixed with `_`) that
+some of them are built from are in [vars/main.yml](../vars/main.yml).
 
 The role:
 
@@ -187,7 +188,8 @@ State of the packages to install. When set to `latest`, all packages on the syst
   from `_linux_pg_packages` appended
 
 Packages to install, per inventory group.
-By default this is the `default` set of `_linux_packages`, with the set for the package manager of the host
+By default it is built from `_linux_packages` and `_linux_pg_packages` in [vars/main.yml](../vars/main.yml): the
+`default` set of `_linux_packages`, with the set for the package manager of the host
 (`apt`, `dnf` or `zypper`) appended per group, plus the PostgreSQL packages (`_linux_pg_packages`) for every version
 in `linux_pg_versions` appended to the `hacluster` group.
 
@@ -196,7 +198,8 @@ in `linux_pg_versions` appended to the `hacluster` group.
 - **Type:** dict (package manager → inventory group → list of packages)
 
 Package lists per package manager and per inventory group, used to derive `linux_packages`.
-Override `linux_packages` rather than this variable.
+Defined in [vars/main.yml](../vars/main.yml). As a role variable it takes precedence over the inventory, so it can't be
+overridden there: set `linux_packages` instead.
 
 | Package manager | Group        | Packages |
 |-----------------|--------------|----------|
@@ -219,7 +222,8 @@ a default PostgreSQL cluster. `postgresql.service` stays enabled but starts noth
 PostgreSQL packages per package manager, added to the `hacluster` group of `linux_packages` once for every version
 in `linux_pg_versions`. Package managers without an entry use the `default` list.
 `{version}` is replaced by the version (e.g. `9.6`) and `{short}` by the version without dots (e.g. `96`).
-Override `linux_packages` rather than this variable.
+Defined in [vars/main.yml](../vars/main.yml). As a role variable it takes precedence over the inventory, so it can't be
+overridden there: set `linux_packages` instead.
 
 | Package manager | Packages |
 |-----------------|----------|
@@ -251,7 +255,8 @@ as `perl(IPC::Run)` for `postgresql<version>-devel`. Set to an empty string to l
 - **Default:** `_linux_public_repos[ansible_facts.pkg_mgr]` plus `_linux_pg_repos[ansible_facts.pkg_mgr]` for every
   version in `linux_pg_versions`
 
-Package repositories to configure, selected from `_linux_public_repos` by the package manager of the host.
+Package repositories to configure. By default built from `_linux_public_repos` and `_linux_pg_repos` in
+[vars/main.yml](../vars/main.yml): the repositories of `_linux_public_repos` for the package manager of the host.
 Every item sets the options of
 [`ansible.builtin.yum_repository`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/yum_repository_module.html) (dnf) or
 [`community.general.zypper_repository`](https://docs.ansible.com/ansible/latest/collections/community/general/zypper_repository_module.html) (zypper).
@@ -268,7 +273,9 @@ The version specific PGDG repositories from `_linux_pg_repos` are appended for e
 
 - **Type:** dict (package manager → list of repository definitions)
 
-Repository definitions per package manager. Override `linux_public_repos` rather than this variable.
+Repository definitions per package manager.
+Defined in [vars/main.yml](../vars/main.yml). As a role variable it takes precedence over the inventory, so it can't be
+overridden there: set `linux_public_repos` instead.
 
 | Package manager | Repositories |
 |-----------------|--------------|
@@ -282,7 +289,8 @@ Repository definitions per package manager. Override `linux_public_repos` rather
 
 Version specific PGDG repositories per package manager, added to `linux_public_repos` once for every version in
 `linux_pg_versions`. `{version}` is replaced by the version (e.g. `17`).
-Override `linux_public_repos` rather than this variable.
+Defined in [vars/main.yml](../vars/main.yml). As a role variable it takes precedence over the inventory, so it can't be
+overridden there: set `linux_public_repos` instead.
 
 | Package manager | Repositories |
 |-----------------|--------------|
