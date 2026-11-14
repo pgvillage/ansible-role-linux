@@ -97,3 +97,158 @@ _linux_module_options:
     - repo
     - runrefresh
     - state
+
+# Internal: PostgreSQL packages per package manager (falls back to `default`), added to the hacluster group
+# once for every version in linux_pg_versions.
+# '{version}' is replaced by the version (e.g. 9.6) and '{short}' by the version without dots (e.g. 96)
+# Used to derive linux_packages. Role variable, so an inventory can't override it: set linux_packages instead.
+_linux_pg_packages:
+  default:
+    - "postgresql{short}"
+    - "postgresql{short}-server"
+    - "postgresql{short}-contrib"
+    - "postgresql{short}-devel"
+    - "postgresql{short}-plpython3"
+  apt:
+    - "postgresql-{version}"
+
+# Internal: package lists per package manager (default, apt, dnf, zypper) and per inventory group.
+# Used to derive linux_packages. Role variable, so an inventory can't override it: set linux_packages instead.
+_linux_packages:
+  default:
+    hacluster:
+      - "stolon"
+      - "wal-g-pg"
+      - "etcd"
+
+    backup:
+      - "rustfs"
+      - "rustfs-cli"
+
+    router:
+      - keepalived
+      - haproxy
+      - pgroute66
+
+    localhosts:
+      - "chainsmith"
+
+  # Package manager specific packages are appended to the default packages
+  apt:
+    hacluster:
+      - "acl"
+    backup:
+      - "acl"
+
+  dnf:
+    hacluster:
+      - glibc-all-langpacks
+      - langpacks-en
+
+  zypper:
+    hacluster:
+      - glibc-locale
+      - glibc-locale-base
+      - openssl
+
+# Internal: version specific PostgreSQL repositories per package manager, added once for every version in
+# linux_pg_versions. '{version}' is replaced by the version (e.g. 17)
+# apt has no entry, because apt.postgresql.org serves all versions from one repository.
+# Role variable, so an inventory can't override it: set linux_public_repos instead.
+_linux_pg_repos:
+  dnf:
+    - name: "pgdg{version}"
+      description: "PostgreSQL {version} for RHEL / Rocky $releasever - $basearch"
+      baseurl: "https://download.postgresql.org/pub/repos/yum/{version}/redhat/rhel-$releasever-$basearch"
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+  zypper:
+    - name: "pgdg{version}"
+      description: "PostgreSQL {version} for openSUSE Leap"
+      repo: >-
+        https://download.postgresql.org/pub/repos/zypp/{version}/opensuse/leap-{{
+        ansible_facts.distribution_version }}-{{
+        ansible_facts.architecture }}/
+      enabled: true
+      priority: 20
+
+# Internal: repository definitions per package manager (dnf, zypper, apt): the PgVillage repository and the
+# version independent PostgreSQL PGDG repositories (plus EPEL for dnf). Role variable, so an inventory can't
+# override it: set linux_public_repos instead.
+_linux_public_repos:
+  dnf:
+    - name: PgVillage
+      description: PgVillage RPM Library - RHEL $releasever - $basearch
+      baseurl: https://repo.pgvillage.org/yum/{{ linux_pgvillage_channel }}/el$releasever/$basearch
+      gpgkey: https://repo.pgvillage.org/yum/pgvillage.asc
+      gpgcheck: true
+      file: pgvillage
+    - name: "pgdg-common"
+      description: PostgreSQL common RPMs for RHEL / Rocky $releasever - $basearch
+      baseurl: https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-$releasever-$basearch
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+      exclude: etcd
+    - name: "pgdg-rhel-extras"
+      description: Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky $releasever - $basearch
+      baseurl: https://download.postgresql.org/pub/repos/yum/extras/redhat/rhel-$releasever-$basearch/
+      enabled: true
+      gpgcheck: true
+      gpgkey: "{{ linux_gpg_keys.dnf[ansible_facts.architecture] }}"
+      # repo_gpgcheck: yes
+      file: "pgdg-redhat-all"
+      exclude: "etcd*"
+    - name: "epel"
+      description: "Extra Packages for Enterprise Linux {{ ansible_facts.distribution_major_version }} - $basearch"
+      metalink: >-
+        https://mirrors.fedoraproject.org/metalink?repo=epel-{{ ansible_facts.distribution_major_version
+        }}&arch=$basearch&infra=$infra&content=$contentdir
+      enabled: true
+      gpgcheck: "yes"
+      gpgkey: "{{ linux_gpg_keys.dnf.epel }}"
+      # repo_gpgcheck: yes
+      file: "epel"
+  # zypper repositories use facts instead of $releasever / $basearch: zypper reports those expanded, so
+  # zypper_repository would see a changed description or url on every run
+  zypper:
+    - name: PgVillage
+      description: PgVillage RPM Library - openSUSE {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}
+      repo: >-
+        https://repo.pgvillage.org/zypp/{{ linux_pgvillage_channel }}/lp{{
+        ansible_facts.distribution_version | replace('.', '') }}/{{
+        ansible_facts.architecture }}
+      priority: 10
+      disable_gpg_check: true
+    - name: "pgdg-common"
+      description: PostgreSQL common RPMs for openSUSE {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}
+      repo: https://download.postgresql.org/pub/repos/zypp/common/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
+      enabled: true
+      priority: 20
+    - name: "pgdg-opensuse-extras"
+      description: >-
+        Extra packages to support some RPMs in the PostgreSQL RPM repo for openSUSE
+        {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}
+      repo: https://download.postgresql.org/pub/repos/zypp/extras/opensuse/leap-{{ ansible_facts.distribution_version }}-{{ ansible_facts.architecture }}/
+      enabled: true
+      priority: 20
+  apt:
+    - name: PgVillage
+      description: "PgVillage DEB Library - Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
+      repo: >-
+        [signed-by=/etc/apt/keyrings/pgvillage.asc arch={{ linux_architecture }}]
+        https://repo.pgvillage.org/apt/{{ linux_pgvillage_channel }}
+        {{ ansible_facts.distribution_release }}
+        main
+      priority: 10
+    - name: "pgdg"
+      description: "PostgreSQL for Ubuntu {{ ansible_facts.distribution_version }} - {{ ansible_facts.architecture }}"
+      repo: |
+        [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt {{ ansible_facts.distribution_release }}-pgdg main
+      enabled: true
+      priority: 20
